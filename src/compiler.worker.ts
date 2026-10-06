@@ -16,6 +16,7 @@ import type { CppStandard, ProjectFile, WorkerRequest, WorkerResponse } from "./
 const worker = self as DedicatedWorkerGlobalScope;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
+const strictDecoder = new TextDecoder("utf-8", { fatal: true });
 // Worker response headers are cached with the worker script. Bump this marker
 // whenever a deployment changes headers that govern worker execution.
 const WORKER_CACHE_VERSION = "csp-wasm-v2";
@@ -26,6 +27,17 @@ function send(message: WorkerResponse) {
 
 function compilerStandard(standard: CppStandard) {
   return standard === "c++23" ? "c++2b" : standard;
+}
+
+function decodeBase64(value: string) {
+  const binary = atob(value);
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+}
+
+function encodeBase64(value: Uint8Array) {
+  let binary = "";
+  for (let offset = 0; offset < value.length; offset += 0x8000) binary += String.fromCharCode(...value.subarray(offset, offset + 0x8000));
+  return btoa(binary);
 }
 
 function createWorkspace(files: ProjectFile[]) {
@@ -47,20 +59,29 @@ function createWorkspace(files: ProjectFile[]) {
       }
     }
 
-    contents.set(parts.at(-1)!, new File(encoder.encode(projectFile.content)));
+    const data = projectFile.encoding === "base64" ? decodeBase64(projectFile.content) : encoder.encode(projectFile.content);
+    contents.set(parts.at(-1)!, new File(data));
   }
 
   return new PreopenDirectory("/workspace", root);
 }
 
-function readWorkspace(directory: Directory, prefix = ""): ProjectFile[] {
+function readWorkspace(directory: Directory, originalFiles: Map<string, ProjectFile>, prefix = ""): ProjectFile[] {
   const files: ProjectFile[] = [];
   for (const [name, entry] of directory.contents) {
     const path = prefix ? `${prefix}/${name}` : name;
     if (entry instanceof Directory) {
-      files.push(...readWorkspace(entry, path));
+      files.push(...readWorkspace(entry, originalFiles, path));
     } else if (entry instanceof File) {
-      files.push({ path, content: new TextDecoder().decode(entry.data) });
+      const original = originalFiles.get(path);
+      if (original?.encoding === "base64") files.push({ path, content: encodeBase64(entry.data), encoding: "base64", mimeType: original.mimeType });
+      else {
+        try {
+          files.push({ path, content: strictDecoder.decode(entry.data) });
+        } catch {
+          files.push({ path, content: encodeBase64(entry.data), encoding: "base64", mimeType: "application/octet-stream" });
+        }
+      }
     }
   }
   return files.sort((a, b) => a.path.localeCompare(b.path));
@@ -83,7 +104,7 @@ worker.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     if (!entry) throw new Error(`Entry file not found: ${entryFile}`);
 
     const extraFiles = Object.fromEntries(
-      files.filter((file) => file.path !== entryFile).map((file) => [file.path, file.content]),
+      files.filter((file) => file.path !== entryFile && file.encoding !== "base64").map((file) => [file.path, file.content]),
     );
     const { module, compileOutput } = await compile({
       source: entry.content,
@@ -142,7 +163,7 @@ worker.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       stderr += `${error instanceof Error ? error.message : String(error)}\n`;
     }
 
-    const outputFiles = readWorkspace(workspace.dir);
+    const outputFiles = readWorkspace(workspace.dir, new Map(files.map((file) => [file.path, file])));
     const outputValidation = validateProjectFiles(outputFiles);
     if (!outputValidation.ok) throw new Error(`Runtime filesystem rejected: ${outputValidation.error}`);
 

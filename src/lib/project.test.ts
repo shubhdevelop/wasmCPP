@@ -23,6 +23,14 @@ describe("project validation", () => {
     ])).toMatchObject({ ok: false });
   });
 
+  it("counts decoded binary bytes instead of base64 storage bytes", () => {
+    expect(validateProjectFiles([{ path: "image.png", content: "iVBORw==", encoding: "base64", mimeType: "image/png" }])).toEqual({ ok: true, totalBytes: 4 });
+  });
+
+  it("rejects malformed binary data", () => {
+    expect(validateProjectFiles([{ path: "image.png", content: "not base64!", encoding: "base64" }])).toMatchObject({ ok: false });
+  });
+
   it("prefers main.cpp as the entry file", () => {
     const files = [
       { path: "demo.cpp", content: "" },

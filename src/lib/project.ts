@@ -16,6 +16,13 @@ export type ProjectValidation =
   | { ok: true; totalBytes: number }
   | { ok: false; error: string };
 
+export function projectFileByteLength(file: ProjectFile) {
+  if (file.encoding !== "base64") return new TextEncoder().encode(file.content).byteLength;
+  if (file.content.length % 4 !== 0 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(file.content)) return -1;
+  const padding = file.content.endsWith("==") ? 2 : file.content.endsWith("=") ? 1 : 0;
+  return (file.content.length / 4) * 3 - padding;
+}
+
 export function normalizeProjectPath(input: string) {
   const path = input.trim().replace(/^\/+/, "").replace(/\/+/g, "/");
   if (!path || path.endsWith("/")) return { ok: false as const, error: "Enter a file path, not a folder." };
@@ -29,7 +36,6 @@ export function validateProjectFiles(files: ProjectFile[]): ProjectValidation {
   if (!files.length) return { ok: false, error: "The project must contain at least one file." };
   if (files.length > PROJECT_LIMITS.maxFiles) return { ok: false, error: `Projects are limited to ${PROJECT_LIMITS.maxFiles} files.` };
 
-  const encoder = new TextEncoder();
   const paths = new Set<string>();
   let totalBytes = 0;
   for (const file of files) {
@@ -38,7 +44,8 @@ export function validateProjectFiles(files: ProjectFile[]): ProjectValidation {
     if (paths.has(file.path)) return { ok: false, error: `Duplicate project path: ${file.path}` };
     paths.add(file.path);
 
-    const fileBytes = encoder.encode(file.content).byteLength;
+    const fileBytes = projectFileByteLength(file);
+    if (fileBytes < 0) return { ok: false, error: `${file.path} contains invalid binary data.` };
     if (fileBytes > PROJECT_LIMITS.maxFileBytes) return { ok: false, error: `${file.path} exceeds the 512 KB file limit.` };
     totalBytes += fileBytes;
     if (totalBytes > PROJECT_LIMITS.maxProjectBytes) return { ok: false, error: "The project exceeds the 2 MB workspace limit." };
@@ -47,9 +54,10 @@ export function validateProjectFiles(files: ProjectFile[]): ProjectValidation {
 }
 
 export function findEntryFile(files: ProjectFile[]) {
-  return files.find((file) => file.path === "main.cpp")
-    || files.find((file) => !file.path.includes("/") && /\.(cpp|cc|cxx)$/i.test(file.path))
-    || files.find((file) => /\.(cpp|cc|cxx)$/i.test(file.path));
+  const textFiles = files.filter((file) => file.encoding !== "base64");
+  return textFiles.find((file) => file.path === "main.cpp")
+    || textFiles.find((file) => !file.path.includes("/") && /\.(cpp|cc|cxx)$/i.test(file.path))
+    || textFiles.find((file) => /\.(cpp|cc|cxx)$/i.test(file.path));
 }
 
 export function loadStoredProject(storage: Storage, key: string, defaults: ProjectFile[]) {
