@@ -7,6 +7,7 @@ import { getCM, Vim, vim } from "@replit/codemirror-vim";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
 import {
+  AlignLeft,
   Check,
   ChevronDown,
   ChevronRight,
@@ -21,6 +22,7 @@ import {
   FolderPlus,
   House,
   Image as ImageIcon,
+  Info,
   Keyboard,
   Maximize2,
   Minimize2,
@@ -164,7 +166,7 @@ app!.innerHTML = `
           <div class="toolbar-divider"></div>
           <div class="editor-toolbar">
             <div class="editor-tabs" id="editor-tabs" role="tablist" aria-label="Open files"></div>
-            <button class="chrome-button split-button" id="split-right-button" aria-label="Split editor right" title="Split editor right"><i data-lucide="columns-2"></i></button><button class="chrome-button split-button" id="split-down-button" aria-label="Split editor down" title="Split editor down"><i data-lucide="rows-2"></i></button>
+            <button class="chrome-button split-button" id="split-right-button" aria-label="Split editor right" title="Split editor right"><i data-lucide="columns-2"></i></button><button class="chrome-button split-button" id="split-down-button" aria-label="Split editor down" title="Split editor down"><i data-lucide="rows-2"></i></button><button class="chrome-button format-button" id="format-button" aria-label="Format document" title="Format document · ⇧⌥F"><i data-lucide="align-left"></i></button>
             <div class="toolbar-actions">
               <label class="select-wrap">
                 <span class="sr-only">Example</span>
@@ -210,7 +212,7 @@ app!.innerHTML = `
           <div class="workbench">
             <div class="code-area">
               <div class="editor-grid" id="editor-grid"><section class="editor-pane active" data-editor-pane="pane-1"><div class="pane-title"><span data-pane-title></span><button class="pane-close" data-close-pane aria-label="Close editor pane" title="Close pane">×</button></div><div class="editor-host" id="editor"></div><div class="markdown-resizer" data-markdown-resizer role="separator" aria-label="Resize Markdown preview" aria-orientation="vertical" tabindex="0" hidden></div><article class="markdown-preview" data-markdown-preview tabindex="0" hidden></article></section></div>
-              <div class="editor-status"><span id="cursor-position">Ln 1, Col 1</span><span id="file-size">0 B</span><span class="desktop-only">UTF-8</span><span class="desktop-only">Spaces: 4</span><button id="markdown-preview-toggle" aria-label="Preview Markdown" aria-pressed="false" hidden><i data-lucide="eye"></i><span>Preview</span></button><label class="theme-picker"><span class="sr-only">Color theme</span><select id="theme-select" aria-label="Color theme"><option value="local">Local Lab</option><option value="catppuccin-latte">Catppuccin Latte</option><option value="catppuccin-frappe">Catppuccin Frappé</option><option value="catppuccin-macchiato">Catppuccin Macchiato</option><option value="catppuccin-mocha">Catppuccin Mocha</option></select></label><button id="vim-toggle" aria-label="Enable Vim mode" aria-pressed="false"><i data-lucide="keyboard"></i><span>Vim</span></button><button id="panel-toggle" aria-label="Toggle bottom panel" aria-pressed="true"><i data-lucide="panel-bottom-close"></i><span>Panel</span></button><button id="zen-toggle" aria-label="Enter Zen mode" aria-pressed="false"><i data-lucide="maximize-2"></i><span>Zen</span></button></div>
+              <div class="editor-status"><span id="cursor-position">Ln 1, Col 1</span><span id="file-size">0 B</span><span class="desktop-only">UTF-8</span><span class="desktop-only">Spaces: 4</span><button id="markdown-preview-toggle" aria-label="Preview Markdown" aria-pressed="false" hidden><i data-lucide="eye"></i><span>Preview</span></button><label class="theme-picker"><span class="sr-only">Color theme</span><select id="theme-select" aria-label="Color theme"><option value="local">Local Lab</option><option value="catppuccin-latte">Catppuccin Latte</option><option value="catppuccin-frappe">Catppuccin Frappé</option><option value="catppuccin-macchiato">Catppuccin Macchiato</option><option value="catppuccin-mocha">Catppuccin Mocha</option></select></label><button id="format-on-save-toggle" aria-label="Enable format on save" aria-pressed="false"><i data-lucide="align-left"></i><span>Format on save</span></button><button id="vim-toggle" aria-label="Enable Vim mode" aria-pressed="false"><i data-lucide="keyboard"></i><span>Vim</span></button><button id="panel-toggle" aria-label="Toggle bottom panel" aria-pressed="true"><i data-lucide="panel-bottom-close"></i><span>Panel</span></button><button id="zen-toggle" aria-label="Enter Zen mode" aria-pressed="false"><i data-lucide="maximize-2"></i><span>Zen</span></button></div>
             </div>
             <div class="row-resizer" id="panel-resizer" role="separator" aria-label="Resize bottom panel" aria-orientation="horizontal" tabindex="0"></div>
             <div class="io-pane">
@@ -241,7 +243,7 @@ app!.innerHTML = `
                 <span class="save-state"><i data-lucide="check"></i><span id="save-status">Saved locally</span></span>
                 <span class="sandbox-note"><strong>Browser-safe sandbox.</strong> Project files never leave this browser.</span>
                 <span class="meta-spacer"></span>
-                <div class="status-actions"><button id="shortcuts-button"><i data-lucide="keyboard"></i><span>Shortcuts</span></button><button id="download-button"><i data-lucide="download"></i><span>Download current file</span></button></div>
+                <div class="status-actions"><button id="capabilities-button" class="icon-only" aria-label="About capabilities and limitations" title="Capabilities and limitations"><i data-lucide="info"></i></button><button id="shortcuts-button"><i data-lucide="keyboard"></i><span>Shortcuts</span></button><button id="download-button"><i data-lucide="download"></i><span>Download current file</span></button></div>
                 <span id="timing-text">—</span>
               </div>
             </div>
@@ -303,11 +305,38 @@ app!.innerHTML = `
     <button class="dialog-close" data-close-dialog="shortcuts-dialog" aria-label="Close">×</button>
     <p class="eyebrow">Keyboard shortcuts</p>
     <h2>Move faster</h2>
-    <div class="shortcut-list"><span>Run or stop project</span><kbd>⌘ Enter</kbd><span>Go to file</span><kbd>⌘ P</kbd><span>Toggle website navigation</span><kbd>⌘ ⇧ B</kbd><span>Toggle explorer</span><kbd>⌘ B</kbd><span>Toggle bottom panel</span><kbd>⌘ J</kbd><span>Toggle Vim mode</span><kbd>⌘ ⌥ V</kbd><span>Toggle Zen mode</span><kbd>⌘ ⌥ Z</kbd></div>
+    <div class="shortcut-list"><span>Save current file</span><kbd>⌘ S</kbd><span>Format document</span><kbd>⇧ ⌥ F</kbd><span>Run or stop project</span><kbd>⌘ Enter</kbd><span>Go to file</span><kbd>⌘ P</kbd><span>Toggle website navigation</span><kbd>⌘ ⇧ B</kbd><span>Toggle explorer</span><kbd>⌘ B</kbd><span>Toggle bottom panel</span><kbd>⌘ J</kbd><span>Toggle Vim mode</span><kbd>⌘ ⌥ V</kbd><span>Toggle Zen mode</span><kbd>⌘ ⌥ Z</kbd></div>
+  </dialog>
+
+  <dialog id="capabilities-dialog" class="capabilities-dialog">
+    <button class="dialog-close" data-close-dialog="capabilities-dialog" aria-label="Close">×</button>
+    <div class="dialog-icon"><i data-lucide="info"></i></div>
+    <p class="eyebrow">Browser C++ workspace</p>
+    <h2>What this editor can do</h2>
+    <p>Compilation and execution happen locally in this browser through Clang and WASI. Project files are saved in this browser and are not uploaded to a compilation server.</p>
+    <div class="capability-grid">
+      <div class="supported">
+        <b>Supported</b>
+        <span>Compile and run C++11 through C++23</span>
+        <span>Use headers and files inside <code>/workspace</code></span>
+        <span>Pass stdin and command-line arguments</span>
+        <span>Create, import, rename, move, and download files</span>
+        <span>Edit Markdown with Mermaid diagrams</span>
+      </div>
+      <div class="limited">
+        <b>Current limitations</b>
+        <span>One <code>.cpp</code> entry point is compiled at a time</span>
+        <span>No native threads, C++ exceptions, sockets, or dynamic libraries</span>
+        <span>No direct access to your host filesystem</span>
+        <span>Imported files are copies, not live-synced originals</span>
+        <span>Large compiler assets make the first load slower</span>
+      </div>
+    </div>
+    <p class="dialog-note"><strong>Storage limits:</strong> up to 100 files, 512 KB per file, and 2 MB total project content. Browser storage can be cleared by private browsing, site-data cleanup, or browser policy.</p>
   </dialog>
 `;
 
-const ICONS = { Check, ChevronDown, ChevronRight, Code2, Columns2, Copy, Download, Eye, FileCode2, FileText, Folder, FolderPlus, House, Image: ImageIcon, Keyboard, Maximize2, Minimize2, PanelBottomClose, PanelBottomOpen, PanelLeftClose, PanelLeftOpen, Pencil, Play, Plus, RotateCcw, Rows2, Search, Square, Terminal, Trash2, Upload };
+const ICONS = { AlignLeft, Check, ChevronDown, ChevronRight, Code2, Columns2, Copy, Download, Eye, FileCode2, FileText, Folder, FolderPlus, House, Image: ImageIcon, Info, Keyboard, Maximize2, Minimize2, PanelBottomClose, PanelBottomOpen, PanelLeftClose, PanelLeftOpen, Pencil, Play, Plus, RotateCcw, Rows2, Search, Square, Terminal, Trash2, Upload };
 createIcons({ icons: ICONS });
 
 function cloneDefaults() {
@@ -360,12 +389,13 @@ type StoredPreferences = {
   panelHeight: number;
   editorSplitRatio: number;
   markdownSplitRatio: number;
+  formatOnSave: boolean;
   collapsedFolders: string[];
 };
 
 function loadStoredPreferences(storage: Storage): StoredPreferences {
   const mobile = window.matchMedia("(max-width: 680px)").matches;
-  const defaults: StoredPreferences = { standard: "c++20", optimization: "2", stdin: "", argv: "/workspace/data/numbers.txt", explorerOpen: !mobile, panelOpen: true, navigationOpen: !mobile, theme: "local", sidebarWidth: 218, panelHeight: 230, editorSplitRatio: .5, markdownSplitRatio: .5, collapsedFolders: [] };
+  const defaults: StoredPreferences = { standard: "c++20", optimization: "2", stdin: "", argv: "/workspace/data/numbers.txt", explorerOpen: !mobile, panelOpen: true, navigationOpen: !mobile, theme: "local", sidebarWidth: 218, panelHeight: 230, editorSplitRatio: .5, markdownSplitRatio: .5, formatOnSave: false, collapsedFolders: [] };
   try {
     const value = JSON.parse(storage.getItem(PREFERENCES_STORAGE_KEY) || "null") as Partial<StoredPreferences> | null;
     if (!value) return defaults;
@@ -382,6 +412,7 @@ function loadStoredPreferences(storage: Storage): StoredPreferences {
       panelHeight: typeof value.panelHeight === "number" ? Math.max(150, value.panelHeight) : defaults.panelHeight,
       editorSplitRatio: typeof value.editorSplitRatio === "number" ? Math.max(.2, Math.min(.8, value.editorSplitRatio)) : defaults.editorSplitRatio,
       markdownSplitRatio: typeof value.markdownSplitRatio === "number" ? Math.max(.2, Math.min(.8, value.markdownSplitRatio)) : defaults.markdownSplitRatio,
+      formatOnSave: typeof value.formatOnSave === "boolean" ? value.formatOnSave : defaults.formatOnSave,
       collapsedFolders: Array.isArray(value.collapsedFolders) ? value.collapsedFolders.filter((path): path is string => typeof path === "string") : [],
     };
   } catch {
@@ -412,6 +443,7 @@ let sidebarWidth = storedPreferences.sidebarWidth;
 let panelHeight = storedPreferences.panelHeight;
 let editorSplitRatio = storedPreferences.editorSplitRatio;
 let markdownSplitRatio = storedPreferences.markdownSplitRatio;
+let formatOnSave = storedPreferences.formatOnSave;
 let zenMode = false;
 let vimEnabled = localStorage.getItem(VIM_STORAGE_KEY) === "true";
 const collapsedFolders = new Set(storedPreferences.collapsedFolders);
@@ -425,7 +457,11 @@ function rememberParentFolders(path: string) {
 
 projectFiles.forEach((file) => rememberParentFolders(file.path));
 
-const runKeymap = keymap.of([{ key: "Mod-Enter", run: () => { void runCode(); return true; } }]);
+const runKeymap = keymap.of([
+  { key: "Mod-Enter", run: () => { void runCode(); return true; } },
+  { key: "Mod-s", run: () => { void saveActiveFile(); return true; } },
+  { key: "Shift-Alt-f", run: () => { void formatDocument(activeEditorPane); return true; } },
+]);
 type EditorPane = {
   id: string;
   path: string;
@@ -594,6 +630,7 @@ function activateEditorPane(pane: EditorPane, shouldFocus = true) {
   updateCursor(editor);
   updateFileMeta();
   syncMarkdownPreviewUi();
+  syncFormatterUi();
   if (shouldFocus) {
     if (pane.viewingImage) pane.preview.focus();
     else editor.focus();
@@ -647,11 +684,9 @@ function exitVimToNormalMode(targetEditor = editor) {
 }
 
 Vim.defineEx("write", "w", () => {
-  const file = currentFile();
-  if (file.encoding !== "base64") file.content = editor.state.doc.toString();
-  persistProject();
-  showToast("Saved locally.");
+  void saveActiveFile();
 });
+Vim.defineEx("format", "for", () => { void formatDocument(activeEditorPane); });
 
 const stdin = document.querySelector<HTMLTextAreaElement>("#stdin")!;
 const argvInput = document.querySelector<HTMLInputElement>("#argv")!;
@@ -688,6 +723,7 @@ function persistPreferences() {
       panelHeight,
       editorSplitRatio,
       markdownSplitRatio,
+      formatOnSave,
       collapsedFolders: Array.from(collapsedFolders),
     };
     localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(value));
@@ -698,6 +734,108 @@ function persistPreferences() {
 
 function currentFile() {
   return projectFiles.find((file) => file.path === activePath) || projectFiles[0];
+}
+
+type FormatResult = "changed" | "unchanged" | "unsupported" | "error";
+const FORMAT_PATH_PATTERN = /\.(?:c|cc|cpp|cxx|h|hh|hpp|hxx|ino|java|js|mjs|cjs|ts|json|m|mm|proto|cs)$/i;
+const DEFAULT_CLANG_FORMAT_STYLE = JSON.stringify({ BasedOnStyle: "LLVM", IndentWidth: 4, TabWidth: 4, UseTab: "Never", ColumnLimit: 100, SortIncludes: "Never" });
+let formatterModule: Promise<typeof import("@wasm-fmt/clang-format/vite")> | null = null;
+let formatterBusy = false;
+
+function canFormatPath(path: string) {
+  const file = projectFiles.find((entry) => entry.path === path);
+  return Boolean(file && file.encoding !== "base64" && FORMAT_PATH_PATTERN.test(path));
+}
+
+function syncFormatterUi() {
+  const button = document.querySelector<HTMLButtonElement>("#format-button");
+  if (!button || !activeEditorPane) return;
+  const supported = canFormatPath(activeEditorPane.path);
+  button.disabled = running || formatterBusy || !supported;
+  button.setAttribute("aria-label", supported ? `Format ${activeEditorPane.path}` : "Formatting is unavailable for this file type");
+  button.title = supported ? "Format document · ⇧⌥F" : "Formatting supports C, C++, and related source files";
+}
+
+function syncFormatOnSaveUi() {
+  const button = document.querySelector<HTMLButtonElement>("#format-on-save-toggle")!;
+  button.setAttribute("aria-pressed", String(formatOnSave));
+  button.setAttribute("aria-label", formatOnSave ? "Disable format on save" : "Enable format on save");
+  button.title = `${formatOnSave ? "Enabled" : "Disabled"} · Formats supported files when you press ⌘S or use :w`;
+}
+
+function setFormatOnSave(enabled: boolean) {
+  formatOnSave = enabled;
+  syncFormatOnSaveUi();
+  persistPreferences();
+  showToast(`Format on save ${enabled ? "enabled" : "disabled"}.`);
+}
+
+async function loadFormatter() {
+  formatterModule ||= import("@wasm-fmt/clang-format/vite").then(async (module) => {
+    await module.default();
+    return module;
+  }).catch((error) => {
+    formatterModule = null;
+    throw error;
+  });
+  return formatterModule;
+}
+
+function cursorAfterFormatting(source: string, lineNumber: number, column: number) {
+  const lines = source.split("\n");
+  const index = Math.max(0, Math.min(lineNumber - 1, lines.length - 1));
+  let offset = 0;
+  for (let line = 0; line < index; line += 1) offset += lines[line].length + 1;
+  return offset + Math.min(column, lines[index].length);
+}
+
+async function formatDocument(pane = activeEditorPane, announce = true): Promise<FormatResult> {
+  if (!canFormatPath(pane.path)) {
+    if (announce) showToast("Formatting is available for C, C++, and related source files.", "error");
+    return "unsupported";
+  }
+  if (formatterBusy) {
+    if (announce) showToast("The formatter is already running.");
+    return "error";
+  }
+  const file = projectFiles.find((entry) => entry.path === pane.path)!;
+  const source = pane.view.state.doc.toString();
+  const position = pane.view.state.selection.main.head;
+  const currentLine = pane.view.state.doc.lineAt(position);
+  formatterBusy = true;
+  syncFormatterUi();
+  if (announce && !formatterModule) showToast("Loading the C++ formatter…");
+  try {
+    const module = await loadFormatter();
+    const projectStyle = projectFiles.find((entry) => entry.path === ".clang-format" && entry.encoding !== "base64")?.content;
+    const formatted = module.format(source, file.path, projectStyle || DEFAULT_CLANG_FORMAT_STYLE);
+    if (formatted === source) {
+      if (announce) showToast("Document is already formatted.");
+      return "unchanged";
+    }
+    pane.view.dispatch({
+      changes: { from: 0, to: pane.view.state.doc.length, insert: formatted },
+      selection: { anchor: cursorAfterFormatting(formatted, currentLine.number, position - currentLine.from) },
+      userEvent: "input.format",
+    });
+    if (announce) showToast(`Formatted ${file.path}.`);
+    return "changed";
+  } catch (error) {
+    showToast(error instanceof Error ? `Formatting failed: ${error.message}` : "Formatting failed.", "error");
+    return "error";
+  } finally {
+    formatterBusy = false;
+    syncFormatterUi();
+  }
+}
+
+async function saveActiveFile() {
+  const pane = activeEditorPane;
+  const result = formatOnSave && canFormatPath(pane.path) ? await formatDocument(pane, false) : "unsupported";
+  if (result === "error") return;
+  const file = projectFiles.find((entry) => entry.path === pane.path);
+  if (file && file.encoding !== "base64") file.content = pane.view.state.doc.toString();
+  if (persistProject()) showToast(result === "changed" ? "Formatted and saved locally." : "Saved locally.");
 }
 
 function persistEditorTabs() {
@@ -1604,6 +1742,7 @@ function setRunButton(isRunning: boolean) {
   document.querySelector(".ide-card")?.classList.toggle("locked", isRunning);
   [standardSelect, optimizationSelect, stdin, argvInput, document.querySelector<HTMLSelectElement>("#example-select")!, document.querySelector<HTMLButtonElement>("#reset-button")!, document.querySelector<HTMLButtonElement>("#new-file-button")!, document.querySelector<HTMLButtonElement>("#new-folder-button")!, document.querySelector<HTMLButtonElement>("#import-button")!, document.querySelector<HTMLInputElement>("#file-filter")!]
     .forEach((control) => { control.disabled = isRunning; });
+  syncFormatterUi();
   createIcons({ icons: ICONS });
 }
 
@@ -1796,6 +1935,7 @@ document.querySelector<HTMLButtonElement>("#site-nav-toggle")!.addEventListener(
 document.querySelector<HTMLButtonElement>("#nav-shortcuts-button")!.addEventListener("click", () => document.querySelector<HTMLDialogElement>("#shortcuts-dialog")!.showModal());
 document.querySelector<HTMLButtonElement>("#split-right-button")!.addEventListener("click", () => splitEditorPane(activeEditorPane, "vertical"));
 document.querySelector<HTMLButtonElement>("#split-down-button")!.addEventListener("click", () => splitEditorPane(activeEditorPane, "horizontal"));
+document.querySelector<HTMLButtonElement>("#format-button")!.addEventListener("click", () => void formatDocument(activeEditorPane));
 document.querySelector<HTMLButtonElement>("#clear-button")!.addEventListener("click", () => {
   lastResult = { output: "", diagnostics: "" };
   setStatus("Idle", "idle");
@@ -1856,9 +1996,11 @@ document.querySelector<HTMLButtonElement>("#explorer-toggle")!.addEventListener(
 document.querySelector<HTMLButtonElement>("#panel-toggle")!.addEventListener("click", () => setPanelOpen(!panelOpen));
 document.querySelector<HTMLButtonElement>("#panel-close-button")!.addEventListener("click", () => setPanelOpen(false));
 document.querySelector<HTMLButtonElement>("#vim-toggle")!.addEventListener("click", () => setVimEnabled(!vimEnabled));
+document.querySelector<HTMLButtonElement>("#format-on-save-toggle")!.addEventListener("click", () => setFormatOnSave(!formatOnSave));
 document.querySelector<HTMLButtonElement>("#markdown-preview-toggle")!.addEventListener("click", () => setMarkdownPreview(activeEditorPane, !activeEditorPane.previewMode));
 document.querySelector<HTMLButtonElement>("#zen-toggle")!.addEventListener("click", () => setZenMode(!zenMode));
 document.querySelector<HTMLButtonElement>("#shortcuts-button")!.addEventListener("click", () => document.querySelector<HTMLDialogElement>("#shortcuts-dialog")!.showModal());
+document.querySelector<HTMLButtonElement>("#capabilities-button")!.addEventListener("click", () => document.querySelector<HTMLDialogElement>("#capabilities-dialog")!.showModal());
 document.querySelector<HTMLButtonElement>("#workspace-root")!.addEventListener("click", () => {
   currentDirectory = "";
   renderFileTree();
@@ -1907,13 +2049,16 @@ makeResizable(document.querySelector<HTMLElement>("#panel-resizer")!, (event) =>
 }, persistPreferences);
 
 window.addEventListener("keydown", (event) => {
+  if (event.defaultPrevented) return;
   if (event.key === "Escape" && zenMode && !document.querySelector("dialog[open]")) {
     event.preventDefault();
     setZenMode(false);
     return;
   }
+  if (event.key.toLowerCase() === "f" && event.shiftKey && event.altKey) { event.preventDefault(); void formatDocument(activeEditorPane); return; }
   const modifier = event.metaKey || event.ctrlKey;
   if (!modifier) return;
+  if (event.key.toLowerCase() === "s") { event.preventDefault(); void saveActiveFile(); return; }
   if (event.key.toLowerCase() === "p") { event.preventDefault(); openQuickOpen(); }
   if (event.key.toLowerCase() === "b" && event.shiftKey) { event.preventDefault(); setSiteNavigationOpen(!navigationOpen); return; }
   if (event.key.toLowerCase() === "b" && !zenMode) { event.preventDefault(); setExplorerOpen(!explorerOpen); }
@@ -2009,6 +2154,7 @@ setSiteNavigationOpen(navigationOpen);
 setExplorerOpen(explorerOpen);
 setPanelOpen(panelOpen);
 syncVimModeUi();
+syncFormatOnSaveUi();
 restoreEditorLayout(storedEditorTabs.secondaryPath);
 document.querySelector("#input-ready-dot")!.classList.toggle("visible", Boolean(stdin.value || argvInput.value));
 updateCursor(editor);
