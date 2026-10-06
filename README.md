@@ -46,7 +46,7 @@ Keep new language/toolchain behavior inside the worker and new project rules ins
 
 Import the repository in Vercel and use the detected Vite settings, or run `vercel` from the project directory. `vercel.json` supplies immutable caching for hashed assets and production security headers. The app has no server functions, database, or secrets; hosting is static.
 
-The production bundle intentionally removes browsercc's unused precompiled-header artifact. The remaining first-load toolchain is still large, so place the deployment behind a CDN (Vercel does this automatically) and expect the first compile to take longer than repeat visits.
+The production bundle intentionally removes browsercc's unused precompiled-header artifact. The remaining first-load toolchain is still large, so place the deployment behind a CDN (Vercel does this automatically) and expect the first compile to take longer than repeat visits. Content-hashed compiler assets remain immutable; the small worker bootstrap revalidates so updated security headers cannot be stranded in a browser cache.
 
 ## Production controls
 

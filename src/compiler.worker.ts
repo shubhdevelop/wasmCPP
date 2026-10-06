@@ -16,9 +16,12 @@ import type { CppStandard, ProjectFile, WorkerRequest, WorkerResponse } from "./
 const worker = self as DedicatedWorkerGlobalScope;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
+// Worker response headers are cached with the worker script. Bump this marker
+// whenever a deployment changes headers that govern worker execution.
+const WORKER_CACHE_VERSION = "csp-wasm-v2";
 
 function send(message: WorkerResponse) {
-  worker.postMessage(message);
+  worker.postMessage({ ...message, workerCacheVersion: WORKER_CACHE_VERSION });
 }
 
 function compilerStandard(standard: CppStandard) {
