@@ -27,7 +27,7 @@ npm run check  # tests + typecheck + production build
 - CodeMirror editor with full-project local draft persistence
 - Compiler diagnostics and compile/run timings
 - Example programs and current-file download
-- Web Worker isolation with a 30-second cutoff
+- Web Worker isolation with separate five-minute compiler-preparation and 30-second program-execution cutoffs
 - File-count and byte limits at the UI and worker trust boundaries
 - Versioned, validated local-project storage with safe fallback defaults
 - Responsive desktop and mobile layouts
@@ -51,7 +51,7 @@ The production bundle intentionally removes browsercc's unused precompiled-heade
 ## Production controls
 
 - Content Security Policy, cross-origin isolation, clickjacking protection, MIME sniffing protection, and a restrictive Permissions Policy
-- Worker cancellation, timeout, and automatic worker replacement after failure
+- Worker cancellation, a first-load-aware timeout policy, and automatic worker replacement after failure
 - Maximum 100 files, 512 KB per file, and 2 MB total project text
 - CI on pushes and pull requests using Node.js 22
 - No analytics, accounts, cookies, backend code execution, or host filesystem access
