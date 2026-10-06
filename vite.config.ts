@@ -1,5 +1,15 @@
 import { defineConfig } from "vite";
 
+const PREVIEW_SECURITY_HEADERS = {
+  "Content-Security-Policy": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; connect-src 'self'; img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+  "Cross-Origin-Embedder-Policy": "require-corp",
+  "Cross-Origin-Opener-Policy": "same-origin",
+  "Referrer-Policy": "no-referrer",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+};
+
 export default defineConfig({
   base: "./",
   plugins: [
@@ -20,5 +30,10 @@ export default defineConfig({
   },
   worker: {
     format: "es",
+  },
+  // Match the Vercel policy in local production previews so WebAssembly/CSP
+  // regressions are caught before deployment.
+  preview: {
+    headers: PREVIEW_SECURITY_HEADERS,
   },
 });

@@ -8,7 +8,7 @@ Local C++ Lab is a static application. Compilation and execution happen in a ded
 - The program cannot access the visitor's host filesystem, browser DOM, cookies, or application JavaScript context.
 - The compiler worker is terminated when a run is stopped, exceeds 30 seconds, or crashes.
 - Project paths and text sizes are validated in both the main thread and worker.
-- Production headers isolate the document and restrict scripts, framing, browser capabilities, and network connections.
+- Production headers isolate the document and restrict scripts, framing, browser capabilities, and network connections. The CSP grants only the WebAssembly-specific `'wasm-unsafe-eval'` capability; JavaScript `eval()` remains blocked.
 
 ## Known limits
 
