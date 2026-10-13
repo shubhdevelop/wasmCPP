@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 
 const PREVIEW_SECURITY_HEADERS = {
-  "Content-Security-Policy": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; connect-src 'self'; img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+  "Content-Security-Policy": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; connect-src 'self' blob:; img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
   "Cross-Origin-Embedder-Policy": "require-corp",
   "Cross-Origin-Opener-Policy": "same-origin",
   "Referrer-Policy": "no-referrer",
@@ -11,7 +11,7 @@ const PREVIEW_SECURITY_HEADERS = {
 };
 
 export default defineConfig({
-  base: "./",
+  base: "/",
   plugins: [
     {
       name: "prune-unused-browsercc-pch",
@@ -26,7 +26,7 @@ export default defineConfig({
     // browsercc resolves its .wasm and sysroot assets relative to import.meta.url.
     // Pre-bundling changes that URL and makes the development server return its
     // HTML fallback instead of the compiler binary.
-    exclude: ["browsercc"],
+    exclude: ["browsercc", "@sqlite.org/sqlite-wasm", "@electric-sql/pglite", "@duckdb/duckdb-wasm"],
   },
   worker: {
     format: "es",

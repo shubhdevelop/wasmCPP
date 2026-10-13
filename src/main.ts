@@ -152,6 +152,9 @@ app!.innerHTML = `
       <a class="site-brand" href="/welcome" aria-label="Local C++ Lab landing page"><span class="site-brand-mark">C++</span><span class="site-nav-label">Local C++ Lab</span></a>
       <nav class="site-navigation">
         <a class="site-nav-item active" href="/" aria-current="page"><i data-lucide="code-2"></i><span class="site-nav-label">Editor</span></a>
+        <a class="site-nav-item" href="/labs/sqlite"><span>SQL</span><span class="site-nav-label">SQLite Lab</span></a>
+        <a class="site-nav-item" href="/labs/duckdb"><span>DB</span><span class="site-nav-label">DuckDB Lab</span></a>
+        <a class="site-nav-item" href="/labs/pglite"><span>PG</span><span class="site-nav-label">PGlite Lab</span></a>
         <a class="site-nav-item" href="/welcome"><i data-lucide="house"></i><span class="site-nav-label">Landing</span></a>
         <button class="site-nav-item" id="nav-shortcuts-button"><i data-lucide="keyboard"></i><span class="site-nav-label">Shortcuts</span></button>
       </nav>
@@ -2170,8 +2173,11 @@ window.addEventListener("beforeunload", () => runtime.dispose());
 
 function renderLandingPage() {
   document.body.classList.add("landing-page");
-  app!.innerHTML = `<main class="landing-shell"><div class="landing-copy"><span class="landing-kicker">Local C++ Lab</span><h1>Compile and run C++ in your browser.</h1><p>A private Clang + WASI workspace with files, Vim motions, split editing, and no server upload.</p><a href="/">Open the editor</a></div></main>`;
+  app!.innerHTML = `<main class="landing-shell"><div class="landing-copy"><span class="landing-kicker">Local C++ Lab</span><h1>Compile and run C++ in your browser.</h1><p>A private Clang + WASI workspace with files, Vim motions, split editing, and no server upload.</p><a href="/">Open C++ editor</a><p><a href="/labs/sqlite">SQLite Lab</a> · <a href="/labs/duckdb">DuckDB Lab</a> · <a href="/labs/pglite">PGlite Lab</a></p></div></main>`;
 }
 
 if (/^\/(welcome|home)\/?$/.test(window.location.pathname)) renderLandingPage();
-else renderEditorApp();
+else if (/^\/labs\/(sqlite|duckdb|pglite)\/?$/.test(window.location.pathname)) {
+  const engine = window.location.pathname.split("/")[2] as "sqlite" | "duckdb" | "pglite";
+  void import("./sql/lab").then(({renderSqlLab}) => renderSqlLab(app!, engine));
+} else renderEditorApp();
