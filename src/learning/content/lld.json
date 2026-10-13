@@ -1,0 +1,47 @@
+{
+  "id": "lld",
+  "title": "Low-level design",
+  "shortLabel": "LLD",
+  "category": "System design",
+  "description": "Turn requirements into clear responsibilities, interfaces, and collaborating objects.",
+  "modules": [
+    {
+      "id": "lld-foundations",
+      "title": "Responsibilities & object models",
+      "description": "Turn requirements into clear responsibilities, interfaces, and collaborating objects.",
+      "lessons": [
+        {
+          "id": "responsibilities",
+          "title": "Start with responsibilities",
+          "body": "### Model behavior before inheritance\nList the operations the system must support. Assign each operation to a component that owns the information and rules it needs.\n\nFor a parking lot, allocating a compatible spot is different from calculating a fee. Keeping these responsibilities separate makes each policy easier to change.\n\n### State invariants\nA spot cannot hold two active vehicles. A closed ticket cannot be closed again. Make these rules explicit before choosing class names.",
+          "minutes": 8
+        },
+        {
+          "id": "composition",
+          "title": "Interfaces & composition",
+          "body": "### Introduce a boundary for real variation\nA fee policy can vary independently of ticket storage. An interface can let a parking service ask a fee policy for a price without knowing its implementation.\n\n### Prefer small collaborators\nCompose a service from a spot allocator, a ticket store, and a fee policy. Avoid a single class that owns persistence, allocation, pricing, and user interaction.\n\nAn interface has a cost. Introduce one where it expresses a useful contract or isolates an expected change.",
+          "minutes": 8
+        }
+      ],
+      "exercises": [
+        {
+          "id": "lld-parking-lot",
+          "title": "Build a parking lot service",
+          "difficulty": "Intermediate",
+          "prompt": "Complete allocation, ticket creation, and exit handling. There is one car spot and one motorcycle spot; only matching vehicles may park. Return -1 when full, for unknown or closed tickets, or when exit precedes entry. Use monotonically increasing ticket IDs. The hourly fee is 10 units per whole hour; the flat fee is 15. Run the supplied scenario and compare stdout with the expected output. Explain how pricing can change independently of allocation.",
+          "hints": [
+            "Allocate only a free spot of the requested type.",
+            "Validate the ticket and exit time before changing state.",
+            "A successful exit closes the ticket and releases its spot; the injected policy calculates the fee."
+          ],
+          "lab": "cpp",
+          "starter": "#include <iostream>\n#include <vector>\n#include <algorithm>\n\nenum class Vehicle { Car, Motorcycle };\nstruct Spot { Vehicle kind; bool occupied = false; };\nstruct Ticket { int id; int spot; int entered; bool active = true; };\n\nclass SpotAllocator {\n    std::vector<Spot> spots{{Vehicle::Car}, {Vehicle::Motorcycle}};\npublic:\n    int allocate(Vehicle kind) {\n        // TODO: reserve a compatible free spot, or return -1.\n        return -1;\n    }\n    void release(int spot) { spots[spot].occupied = false; }\n};\n\nstruct FeePolicy {\n    virtual int calculate(int hours) const = 0;\n    virtual ~FeePolicy() = default;\n};\nstruct HourlyFee : FeePolicy {\n    int calculate(int hours) const override { return hours * 10; }\n};\nstruct FlatFee : FeePolicy {\n    int calculate(int) const override { return 15; }\n};\n\nclass ParkingService {\n    SpotAllocator allocator;\n    std::vector<Ticket> tickets;\n    const FeePolicy& policy;\npublic:\n    explicit ParkingService(const FeePolicy& fee) : policy(fee) {}\n    int enter(Vehicle kind, int hour) {\n        // TODO: allocate a spot and record an active ticket.\n        return -1;\n    }\n    int exit(int id, int hour) {\n        // TODO: validate, calculate the fee, close, and release.\n        return -1;\n    }\n};\n\nint main() {\n    HourlyFee hourly;\n    ParkingService lot(hourly);\n    int car = lot.enter(Vehicle::Car, 9);\n    std::cout << \"Car ticket: \" << car << '\\n';\n    std::cout << \"Second car: \" << lot.enter(Vehicle::Car, 9) << '\\n';\n    std::cout << \"Motorcycle ticket: \" << lot.enter(Vehicle::Motorcycle, 9) << '\\n';\n    std::cout << \"Early exit: \" << lot.exit(car, 8) << '\\n';\n    std::cout << \"Car fee: \" << lot.exit(car, 12) << '\\n';\n    std::cout << \"Repeated exit: \" << lot.exit(car, 13) << '\\n';\n    std::cout << \"New car ticket: \" << lot.enter(Vehicle::Car, 13) << '\\n';\n    FlatFee flat;\n    ParkingService flatLot(flat);\n    std::cout << \"Flat fee: \" << flatLot.exit(flatLot.enter(Vehicle::Car, 9), 12) << '\\n';\n}\n",
+          "expected": "Car ticket: 1\nSecond car: -1\nMotorcycle ticket: 2\nEarly exit: -1\nCar fee: 30\nRepeated exit: -1\nNew car ticket: 3\nFlat fee: 15\n",
+          "answer": "SpotAllocator owns occupancy, ParkingService owns tickets, and FeePolicy owns pricing. Policy references must outlive the service. This single-threaded in-memory example does not implement concurrent allocation or persistence. A production ticket store can be extracted behind its own interface.\n\n```cpp\n#include <iostream>\n#include <vector>\n#include <algorithm>\n\nenum class Vehicle { Car, Motorcycle };\nstruct Spot { Vehicle kind; bool occupied = false; };\nstruct Ticket { int id; int spot; int entered; bool active = true; };\n\nclass SpotAllocator {\n    std::vector<Spot> spots{{Vehicle::Car}, {Vehicle::Motorcycle}};\npublic:\n    int allocate(Vehicle kind) {\n        for (int i = 0; i < static_cast<int>(spots.size()); ++i) {\n            if (spots[i].kind == kind && !spots[i].occupied) {\n                spots[i].occupied = true;\n                return i;\n            }\n        }\n        return -1;\n    }\n    void release(int spot) { spots[spot].occupied = false; }\n};\n\nstruct FeePolicy {\n    virtual int calculate(int hours) const = 0;\n    virtual ~FeePolicy() = default;\n};\nstruct HourlyFee : FeePolicy {\n    int calculate(int hours) const override { return hours * 10; }\n};\nstruct FlatFee : FeePolicy {\n    int calculate(int) const override { return 15; }\n};\n\nclass ParkingService {\n    SpotAllocator allocator;\n    std::vector<Ticket> tickets;\n    const FeePolicy& policy;\npublic:\n    explicit ParkingService(const FeePolicy& fee) : policy(fee) {}\n    int enter(Vehicle kind, int hour) {\n        int spot = allocator.allocate(kind);\n        if (spot == -1) return -1;\n        int id = static_cast<int>(tickets.size()) + 1;\n        tickets.push_back({id, spot, hour});\n        return id;\n    }\n    int exit(int id, int hour) {\n        for (auto& ticket : tickets) {\n            if (ticket.id == id && ticket.active && hour >= ticket.entered) {\n                int fee = policy.calculate(hour - ticket.entered);\n                ticket.active = false;\n                allocator.release(ticket.spot);\n                return fee;\n            }\n        }\n        return -1;\n    }\n};\n\nint main() {\n    HourlyFee hourly;\n    ParkingService lot(hourly);\n    int car = lot.enter(Vehicle::Car, 9);\n    std::cout << \"Car ticket: \" << car << '\\n';\n    std::cout << \"Second car: \" << lot.enter(Vehicle::Car, 9) << '\\n';\n    std::cout << \"Motorcycle ticket: \" << lot.enter(Vehicle::Motorcycle, 9) << '\\n';\n    std::cout << \"Early exit: \" << lot.exit(car, 8) << '\\n';\n    std::cout << \"Car fee: \" << lot.exit(car, 12) << '\\n';\n    std::cout << \"Repeated exit: \" << lot.exit(car, 13) << '\\n';\n    std::cout << \"New car ticket: \" << lot.enter(Vehicle::Car, 13) << '\\n';\n    FlatFee flat;\n    ParkingService flatLot(flat);\n    std::cout << \"Flat fee: \" << flatLot.exit(flatLot.enter(Vehicle::Car, 9), 12) << '\\n';\n}\n```"
+        }
+      ],
+      "resources": []
+    }
+  ],
+  "lab": "cpp"
+}

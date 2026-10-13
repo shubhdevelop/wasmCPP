@@ -1,0 +1,58 @@
+{
+  "id": "pglite",
+  "title": "PostgreSQL with PGlite",
+  "shortLabel": "PG",
+  "category": "Databases",
+  "description": "Practice PostgreSQL schemas, integrity rules, and transactions locally.",
+  "modules": [
+    {
+      "id": "postgres-foundations",
+      "title": "Constraints & transactions",
+      "description": "Practice PostgreSQL schemas, integrity rules, and transactions locally.",
+      "lessons": [
+        {
+          "id": "constraints",
+          "title": "Put invariants in the schema",
+          "body": "### A table can reject invalid data\nPRIMARY KEY identifies a row. UNIQUE prevents duplicate key values according to the constraint’s null semantics. NOT NULL requires a value. CHECK enforces a predicate.\n\n```sql\nCREATE TABLE accounts (\n id INTEGER PRIMARY KEY,\n balance INTEGER NOT NULL CHECK (balance >= 0)\n);\n```\n\nChoose integer minor units for simple money examples. A production financial model needs additional currency and precision decisions.",
+          "minutes": 8
+        },
+        {
+          "id": "transactions",
+          "title": "Commit related changes together",
+          "body": "### Treat a transfer as one operation\nA debit and a credit belong in one transaction. BEGIN starts a transaction; COMMIT makes its changes durable within the database; ROLLBACK discards uncommitted changes.\n\n### Think about failures\nIf a constraint violation aborts a PostgreSQL transaction, roll back before continuing. A transaction protects related changes, but business validation still matters.\n\nIn this lab, the database is in memory. A commit does not make it survive a browser reload.",
+          "minutes": 8
+        }
+      ],
+      "exercises": [
+        {
+          "id": "pglite-transfer",
+          "title": "Transfer without losing money",
+          "difficulty": "Beginner",
+          "prompt": "Move 30 units from account 1 to account 2 in a single transaction. Verify the final balances and the unchanged total. Load the exercise data first. If your transaction fails, run ROLLBACK before retrying.",
+          "hints": [
+            "Wrap both updates with BEGIN and COMMIT.",
+            "Select final balances after COMMIT."
+          ],
+          "answer": "```sql\nBEGIN;\nUPDATE exercise_accounts SET balance = balance - 30 WHERE id = 1;\nUPDATE exercise_accounts SET balance = balance + 30 WHERE id = 2;\nCOMMIT;\nSELECT * FROM exercise_accounts ORDER BY id;\n```",
+          "lab": "pglite",
+          "starter": "-- TODO: debit and credit in one transaction.\nSELECT * FROM exercise_accounts ORDER BY id;",
+          "setup": "CREATE TABLE exercise_accounts (id INTEGER PRIMARY KEY, balance INTEGER NOT NULL CHECK(balance >= 0));\nINSERT INTO exercise_accounts VALUES (1, 100), (2, 50);",
+          "expected": "1 | 70\n2 | 80\nTotal: 150"
+        }
+      ],
+      "resources": [
+        {
+          "title": "PostgreSQL tutorial",
+          "url": "https://www.postgresql.org/docs/current/tutorial.html",
+          "kind": "Documentation"
+        },
+        {
+          "title": "PGlite API",
+          "url": "https://pglite.dev/docs/api",
+          "kind": "Documentation"
+        }
+      ]
+    }
+  ],
+  "lab": "pglite"
+}

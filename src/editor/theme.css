@@ -1,0 +1,41 @@
+:root { --editor-bg: #111713; --editor-fg: #d6ddd8; --editor-muted: #617067; --editor-chrome: #1b231d; --editor-caret: #f3a37d; --editor-active: #1b281f; --editor-selection: #365741; }
+body[data-theme^="catppuccin-"] { --editor-bg: var(--ctp-base); --editor-fg: var(--ctp-text); --editor-muted: var(--ctp-overlay); --editor-chrome: var(--ctp-mantle); --editor-caret: var(--ctp-rosewater); --editor-active: var(--ctp-surface0); --editor-selection: color-mix(in srgb,var(--ctp-blue) 30%,var(--ctp-base)); }
+body[data-theme^="catppuccin-"] :is(.sql-workspace,.sql-body,.sql-workbench,#sql-results,.sql-result td) { color: var(--ctp-text); background: var(--ctp-base); }
+body[data-theme^="catppuccin-"] :is(.sql-toolbar,.sql-explorer,.sql-editor-heading,.sql-results-heading,.sql-status,.sql-result th) { color: var(--ctp-text); background: var(--ctp-mantle); border-color: var(--ctp-surface0); }
+body[data-theme^="catppuccin-"] :is(.sql-help,.sql-sidebar-note,.sql-toolbar span,.sql-status,.sql-empty,.sql-column,.sql-result > p) { color: var(--ctp-subtext); }
+body[data-theme^="catppuccin-"] :is(.sql-field input,.sql-table-scroll,.sql-result td,.sql-result th,#sql-tables details) { border-color: var(--ctp-surface1); }
+body[data-theme^="catppuccin-"] .sql-field input { color: var(--ctp-text); background: var(--ctp-crust); }
+body[data-theme^="catppuccin-"] .sql-result tr:hover td { background: var(--ctp-surface0); }
+body[data-theme^="catppuccin-"] .sql-error { color: var(--ctp-red); }
+body[data-theme^="catppuccin-"] .exercise-panel { color: var(--ctp-subtext); border-color: var(--ctp-surface1); }
+body[data-theme^="catppuccin-"] .exercise-panel :is(h2,a,summary) { color: var(--ctp-text); }
+body[data-theme^="catppuccin-"] .exercise-panel .exercise-meta { color: var(--ctp-overlay); }
+/* Marketing and learning views use the same selected palette. */
+body.landing-page[data-theme^="catppuccin-"] { --lp-paper:var(--ctp-base); --lp-ink:var(--ctp-text); --lp-muted:var(--ctp-subtext); --lp-line:var(--ctp-surface1); --lp-green:var(--ctp-mauve); color:var(--ctp-text); background:var(--ctp-base); }
+body.landing-page[data-theme^="catppuccin-"] :is(.lp-lab,.lp-engine-strip,.lp-why) { color:var(--ctp-text); background:var(--ctp-mantle); border-color:var(--ctp-surface1); }
+body.landing-page[data-theme^="catppuccin-"] :is(.lp-lab-tags span,.lp-lab-symbol) { color:var(--ctp-text); background:var(--ctp-surface0); border-color:var(--ctp-surface1); }
+body.landing-page[data-theme^="catppuccin-"] :is(.lp-nav nav a,.lp-engine-strip b,.lp-engine-strip small,.lp-why-intro > p:not(.lp-eyebrow),.lp-reasons p,.lp-lab-cta,.lp-local-diagram > span,.lp-local-diagram strong,.lp-local-diagram strong span,.lp-eyebrow,.lp-hero-note,.lp-lab-type) { color:var(--ctp-subtext); }
+body.landing-page[data-theme^="catppuccin-"] :is(.lp-hero h1 em,.lp-why h2 em) { color:var(--ctp-peach); }
+body.landing-page[data-theme^="catppuccin-"] :is(.lp-reasons article,.lp-local-diagram,.lp-lab-cta) { border-color:var(--ctp-surface1); }
+body.landing-page[data-theme^="catppuccin-"] .lp-demo { box-shadow:0 20px 50px -20px #0005; }
+body.landing-page[data-theme^="catppuccin-"] .lp-final { color:var(--ctp-text); background:var(--ctp-mantle); }
+body.landing-page[data-theme^="catppuccin-"] .lp-final :is(p,.lp-final-note) { color:var(--ctp-subtext); }
+body.landing-page[data-theme^="catppuccin-"] a.lp-button:not(.lp-button-small) { color:var(--ctp-base); background:var(--ctp-mauve); border-color:var(--ctp-mauve); }
+body.learning-page[data-theme^="catppuccin-"] { color:var(--ctp-text); background:var(--ctp-base); }
+body.learning-page[data-theme^="catppuccin-"] :is(.lh-brand,.lh-content h1,.lh-track h2,.lh-outline h2,.lh-library-tools h2,.lh-prose h2,.lh-prose h3) { color:var(--ctp-text); }
+body.learning-page[data-theme^="catppuccin-"] :is(.lh-track,.lh-search input,.lh-notes textarea) { color:var(--ctp-text); background:var(--ctp-mantle); border-color:var(--ctp-surface1); }
+body.learning-page[data-theme^="catppuccin-"] :is(.lh-hub-stats span,.lh-track-symbol,.lh-prose code,.lh-lab-callout,.lh-outline nav a[aria-current="page"]) { color:var(--ctp-text); background:var(--ctp-surface0); border-color:var(--ctp-surface1); }
+body.learning-page[data-theme^="catppuccin-"] :is(.lh-header,.lh-outline,.lh-breadcrumb,.lh-footer,.lh-hint,.lh-answer,.lh-completion,.lh-resources,.lh-module-links) { border-color:var(--ctp-surface1); }
+body.learning-page[data-theme^="catppuccin-"] :is(.lh-prose,.lh-intro > p:not(.lh-kicker),.lh-track > p,.lh-outline > p:not(.lh-kicker),.lh-header nav a,.lh-outline nav a,.lh-module-links a,.lh-next,.lh-kicker,.lh-breadcrumb,.lh-resources a,.lh-resources small,.lh-track-counts,.lh-track-top small,.lh-content-meta,.lh-notes,.lh-footer,.lh-lab-callout p,.lh-hint summary,.lh-answer summary) { color:var(--ctp-subtext); }
+body.learning-page[data-theme^="catppuccin-"] .lh-intro h1 em { color:var(--ctp-peach); }
+body.learning-page[data-theme^="catppuccin-"] :is(.lh-primary,.lh-filters button[aria-pressed="true"],.lh-brand > span) { color:var(--ctp-base); background:var(--ctp-mauve); border-color:var(--ctp-mauve); }
+body.learning-page[data-theme^="catppuccin-"] .lh-prose pre { color:var(--ctp-text); background:var(--ctp-crust); }
+body.learning-page[data-theme^="catppuccin-"] progress { accent-color:var(--ctp-green); }
+body.learning-page[data-theme^="catppuccin-"] progress::-webkit-progress-value { background:var(--ctp-green); }
+body.landing-page[data-theme^="catppuccin-"] :is(.lp-demo,.lp-demo-code,.lp-demo-output) { color:var(--ctp-text); background:var(--ctp-base); border-color:var(--ctp-surface1); }
+body.landing-page[data-theme^="catppuccin-"] :is(.lp-demo-top,.lp-demo-tabs,.lp-demo-footer) { color:var(--ctp-subtext); background:var(--ctp-mantle); border-color:var(--ctp-surface1); }
+body.landing-page[data-theme^="catppuccin-"] .lp-demo-tabs button[aria-selected="true"] { color:var(--ctp-text); background:var(--ctp-base); border-color:var(--ctp-mauve); }
+body.landing-page[data-theme^="catppuccin-"] :is(.lp-code-muted,.lp-demo-output > div,.lp-demo-filename) { color:var(--ctp-overlay); }
+body.landing-page[data-theme^="catppuccin-"] .lp-code-orange { color:var(--ctp-mauve); }
+body.landing-page[data-theme^="catppuccin-"] :is(.lp-code-green,.lp-output-success) { color:var(--ctp-green); }
+body.landing-page[data-theme^="catppuccin-"] .lp-demo-output pre { color:var(--ctp-text); }

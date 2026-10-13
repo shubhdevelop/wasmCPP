@@ -7,7 +7,7 @@ export const MAX_RESULT_ROWS = 1000;
 export const quoteIdentifier = (value: string) => `"${value.replaceAll('"', '""')}"`;
 export const tableName = (file: string) => file.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_]/g, "_").replace(/^[0-9]/, "_$&") || "dataset";
 
-export function parseCSV(text: string): string[][] {
+export function parseCSV(text: string, delimiter = ","): string[][] {
   const rows: string[][] = [];
   let row: string[] = [], cell = "", quoted = false, closed = false;
   text = text.replace(/^\uFEFF/, "");
@@ -18,7 +18,7 @@ export function parseCSV(text: string): string[][] {
       else if (ch === '"') { quoted = false; closed = true; }
       else cell += ch;
     } else if (ch === '"' && cell === "" && !closed) quoted = true;
-    else if (ch === ",") { row.push(cell); cell = ""; closed = false; }
+    else if (ch === delimiter) { row.push(cell); cell = ""; closed = false; }
     else if (ch === "\n" || ch === "\r") {
       if (ch === "\r" && text[i + 1] === "\n") i++;
       row.push(cell); rows.push(row); row = []; cell = ""; closed = false;
@@ -35,8 +35,8 @@ export function parseCSV(text: string): string[][] {
 
 export function parseDataset(name: string, text: string): Dataset {
   let columns: string[], rows: Cell[][];
-  if (/\.json$/i.test(name)) {
-    const data: unknown = JSON.parse(text);
+  if (/\.(json|jsonl|ndjson)$/i.test(name)) {
+    const data: unknown = /\.(jsonl|ndjson)$/i.test(name) ? text.split(/\r?\n/).filter(line => line.trim()).map(line => JSON.parse(line)) : JSON.parse(text);
     if (!Array.isArray(data) || !data.length || data.some(r => !r || typeof r !== "object" || Array.isArray(r)))
       throw new Error("JSON must be a nonempty array of objects.");
     columns = [...new Set(data.flatMap(r => Object.keys(r)))];
@@ -44,14 +44,14 @@ export function parseDataset(name: string, text: string): Dataset {
       const v: unknown = r[c];
       return v == null ? null : typeof v === "object" ? JSON.stringify(v) : v as Cell;
     }));
-  } else if (/\.csv$/i.test(name)) {
-    const csv = parseCSV(text);
+  } else if (/\.(csv|tsv)$/i.test(name)) {
+    const csv = parseCSV(text, /\.tsv$/i.test(name) ? "\t" : ",");
     columns = csv.shift()?.map(c => c.trim()) ?? [];
     rows = csv.map((r, i) => {
       if (r.length !== columns.length) throw new Error(`CSV row ${i + 2} has ${r.length} fields; expected ${columns.length}.`);
       return r.map(v => v === "" ? null : v);
     });
-  } else throw new Error("Choose a CSV or JSON file.");
+  } else throw new Error("Choose a CSV, TSV, JSON, JSONL, or NDJSON file.");
   if (!columns.length || columns.length > 100 || columns.some(c => !c || c.includes("\0")) || new Set(columns.map(c => c.toLowerCase())).size !== columns.length)
     throw new Error("Use 1–100 unique, nonempty column names.");
   if (rows.length > MAX_ROWS) throw new Error(`Datasets are limited to ${MAX_ROWS.toLocaleString()} rows.`);
@@ -62,4 +62,4 @@ export function parseDataset(name: string, text: string): Dataset {
 }
 
 export type QueryResult = { columns: string[]; rows: unknown[][]; count: number; truncated: boolean };
-export type TableInfo = { name: string; columns: string[] };
+export type TableInfo = { name: string; columns: string[]; catalog?: string; schema?: string };

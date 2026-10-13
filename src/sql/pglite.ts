@@ -4,15 +4,17 @@ import initUrl from "../../node_modules/@electric-sql/pglite/dist/initdb.wasm?ur
 import dataUrl from "../../node_modules/@electric-sql/pglite/dist/pglite.data?url";
 import { cachedAsset } from "./cache";
 import { MAX_RESULT_ROWS, quoteIdentifier as q } from "./data";
+import type { TableInfo } from "./data";
 import type { SqlAdapter } from "./adapter";
 
 export async function createAdapter(): Promise<SqlAdapter> {
   const [wasm, init, data] = await Promise.all([cachedAsset(wasmUrl), cachedAsset(initUrl), cachedAsset(dataUrl)]);
-  const db = new PGlite({
+  const options = {
     pgliteWasmModule: await WebAssembly.compile(await wasm.arrayBuffer()),
     initdbWasmModule: await WebAssembly.compile(await init.arrayBuffer()),
     fsBundle: await data.blob(),
-  });
+  };
+  let db = new PGlite(options);
   await db.waitReady;
   return {
     async execute(sql) {
@@ -32,11 +34,21 @@ export async function createAdapter(): Promise<SqlAdapter> {
         }
       });
     },
+    async importArchive(file) {
+      const restored = new PGlite({...options,loadDataDir:file});
+      try { await restored.waitReady; }
+      catch (error) { void restored.close().catch(() => {}); throw new Error(`Could not restore PGlite snapshot: ${error instanceof Error ? error.message : String(error)}. Use an archive created by a compatible PGlite dumpDataDir version.`); }
+      const previous = db; db = restored; await previous.close();
+    },
     async tables() {
-      const result = await db.query<{table_name: string; column_name: string}>("SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='public' ORDER BY table_name,ordinal_position");
-      const tables = new Map<string, string[]>();
-      for (const r of result.rows) { const columns = tables.get(r.table_name) ?? []; columns.push(r.column_name); tables.set(r.table_name, columns); }
-      return [...tables].map(([name, columns]) => ({name, columns}));
+      const result = await db.query<{table_schema: string; table_name: string; column_name: string}>("SELECT table_schema,table_name,column_name FROM information_schema.columns WHERE table_schema NOT IN ('pg_catalog','information_schema') ORDER BY table_schema,table_name,ordinal_position");
+      const tables = new Map<string, TableInfo>();
+      for (const r of result.rows) {
+        const key = JSON.stringify([r.table_schema,r.table_name]);
+        const table = tables.get(key) ?? {name:r.table_name,schema:r.table_schema,columns:[]};
+        table.columns.push(r.column_name); tables.set(key,table);
+      }
+      return [...tables.values()];
     },
     dispose() { void db.close(); },
   };

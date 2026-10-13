@@ -1,3 +1,4 @@
+import type { ImportResult } from "./formats";
 import type { Engine, QueryResult, TableInfo } from "./data";
 export class SqlWorkerClient {
   private worker = new Worker(new URL("./engine.worker.ts", import.meta.url), {type: "module"});
@@ -24,7 +25,7 @@ export class SqlWorkerClient {
   init(engine: Engine) { return this.request<void>({type: "init", engine}); }
   execute(sql: string) { return this.request<QueryResult[]>({type: "execute", sql}); }
   tables() { return this.request<TableInfo[]>({type: "tables"}); }
-  importFile(name: string, file: File) { return this.request<number>({type: "import", name, file}); }
+  importFile(name: string, file: File) { return this.request<ImportResult>({type: "import", name, file}); }
   dispose(error = new Error("Sandbox stopped. Its in-memory database was cleared.")) {
     this.disposed = true;
     this.worker.terminate();

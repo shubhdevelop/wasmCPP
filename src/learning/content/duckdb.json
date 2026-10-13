@@ -1,0 +1,53 @@
+{
+  "id": "duckdb",
+  "title": "DuckDB",
+  "shortLabel": "DB",
+  "category": "Databases",
+  "description": "Explore analytical SQL, local datasets, and window functions in DuckDB.",
+  "modules": [
+    {
+      "id": "duckdb-analytics",
+      "title": "Analytical queries & windows",
+      "description": "Explore analytical SQL, local datasets, and window functions in DuckDB.",
+      "lessons": [
+        {
+          "id": "analysis",
+          "title": "Ask an analytical question",
+          "body": "### Define the grain\nThe grain describes what one row represents. An imported sales row might represent a product entry rather than a customer order. Know this before counting rows.\n\n### Build the query in layers\nFilter relevant inputs, group by the dimensions you need, calculate measures, and order the output. CTEs can make intermediate steps readable.\n\n### Use the lab\nImport CSV, JSON, or Parquet. The schema explorer shows the table and column names available to your queries.",
+          "minutes": 8
+        },
+        {
+          "id": "windows",
+          "title": "Window functions preserve rows",
+          "body": "### Aggregation versus a window\nGROUP BY reduces rows into groups. A window function computes a value over related rows while retaining individual rows.\n\n```sql\nSELECT category, product, amount,\n       ROW_NUMBER() OVER (\n         PARTITION BY category ORDER BY amount DESC, product\n       ) AS position\nFROM exercise_sales;\n```\n\nUse a deterministic tie-breaker when choosing a single row. RANK can assign the same rank to tied values; ROW_NUMBER assigns distinct numbers.",
+          "minutes": 8
+        }
+      ],
+      "exercises": [
+        {
+          "id": "duckdb-top-products",
+          "title": "Find the top product per category",
+          "difficulty": "Beginner",
+          "prompt": "Return the highest-priced product in each category from exercise_sales. When amounts tie, choose the product that sorts first by name. Output category, product, amount ordered by category.",
+          "hints": [
+            "Use ROW_NUMBER with PARTITION BY category.",
+            "Filter the numbered rows in an outer query or CTE."
+          ],
+          "answer": "```sql\nWITH ranked AS (\n SELECT *, ROW_NUMBER() OVER (\n  PARTITION BY category ORDER BY amount DESC, product\n ) AS position\n FROM exercise_sales\n)\nSELECT category, product, amount FROM ranked\nWHERE position = 1 ORDER BY category;\n```",
+          "lab": "duckdb",
+          "starter": "-- TODO: rank products within each category.\nSELECT * FROM exercise_sales;",
+          "setup": "CREATE TABLE exercise_sales (category TEXT, product TEXT, amount DOUBLE PRECISION);\nINSERT INTO exercise_sales VALUES\n('Books', 'Algorithms', 45), ('Books', 'Databases', 35),\n('Hardware', 'Keyboard', 80), ('Hardware', 'Mouse', 25),\n('Books', 'Compilers', 55);",
+          "expected": "Books | Compilers | 55\nHardware | Keyboard | 80"
+        }
+      ],
+      "resources": [
+        {
+          "title": "DuckDB window functions",
+          "url": "https://duckdb.org/docs/stable/sql/functions/window_functions",
+          "kind": "Documentation"
+        }
+      ]
+    }
+  ],
+  "lab": "duckdb"
+}

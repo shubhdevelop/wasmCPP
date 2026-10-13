@@ -1,0 +1,49 @@
+{
+  "id": "dbms",
+  "title": "DBMS theory",
+  "shortLabel": "DB",
+  "category": "Computer science",
+  "description": "Understand relational modeling, keys, normalization, indexes, and transactions.",
+  "modules": [
+    {
+      "id": "relational-foundations",
+      "title": "Relations, keys & normalization",
+      "description": "Understand relational modeling, keys, normalization, indexes, and transactions.",
+      "lessons": [
+        {
+          "id": "keys",
+          "title": "Relations & integrity constraints",
+          "body": "### Model facts, not screens\nA relation represents facts about a type of entity or relationship. A primary key identifies a row. A foreign key connects a row to a referenced key.\n\n### Decide what must remain true\nUse uniqueness, required values, and references to express integrity rules. A surrogate ID does not automatically make an email address unique. If uniqueness is a business rule, represent it explicitly.\n\n### Think about cardinality\nOne customer can place many orders. Each order belongs to one customer. Put the customer reference on the order.",
+          "minutes": 8
+        },
+        {
+          "id": "normalization",
+          "title": "Dependencies & normalization",
+          "body": "### Notice repeated facts\nIf every order stores a customer name and email, changing the email may require many updates. A failed update can leave conflicting copies.\n\n### Separate independent facts\nKeep customer attributes in Customers and order attributes in Orders. Connect them using a customer key. Split order line items into a separate relation when one order contains many products.\n\nNormalization is driven by dependencies, not by splitting every table as much as possible. Denormalization is a deliberate tradeoff that needs an update strategy.",
+          "minutes": 8
+        }
+      ],
+      "exercises": [
+        {
+          "id": "dbms-order-model",
+          "title": "Model customers and orders",
+          "difficulty": "Beginner",
+          "prompt": "A spreadsheet has order_id, customer_email, customer_name, product_id, product_name, quantity, and unit_price. An order can contain multiple products. Design tables and keys that avoid repeating customer and product names on each line. Explain how to preserve the price actually paid.",
+          "hints": [
+            "Separate Customers, Orders, Products, and OrderItems.",
+            "The order-item key can combine order_id and product_id if a product appears only once per order.",
+            "Historical unit price belongs on the order item."
+          ],
+          "answer": "Use Customers(customer_id, email UNIQUE, name), Orders(order_id, customer_id FK), Products(product_id, name), and OrderItems(order_id FK, product_id FK, quantity, unit_price_at_purchase). Choose an explicit line_id when a product can appear on multiple lines. Store the purchase price on the line so later price changes do not rewrite order history."
+        }
+      ],
+      "resources": [
+        {
+          "title": "PostgreSQL relational database tutorial",
+          "url": "https://www.postgresql.org/docs/current/tutorial.html",
+          "kind": "Documentation"
+        }
+      ]
+    }
+  ]
+}

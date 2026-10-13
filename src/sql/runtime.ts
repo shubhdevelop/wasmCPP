@@ -1,8 +1,9 @@
+import type { ImportResult } from "./formats";
 import type { Engine, QueryResult, TableInfo } from "./data";
 import { SqlWorkerClient } from "./worker-client";
 interface Client {
   execute(sql: string): Promise<QueryResult[]>;
-  importFile(name: string, file: File): Promise<number>;
+  importFile(name: string, file: File): Promise<ImportResult>;
   tables(): Promise<TableInfo[]>;
   dispose(): void;
 }

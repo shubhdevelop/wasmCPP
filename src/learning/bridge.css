@@ -1,0 +1,11 @@
+.exercise-panel { margin: 12px 8px; padding: 14px 10px; border: 1px solid #34483b; border-radius: 7px; color: #a7b7ad; font-size: 11px; line-height: 1.7; overflow-wrap: anywhere; }
+.exercise-panel h2 { color: #dfebe2; margin: 4px 0 10px; font-size: 14px; line-height: 1.5; }
+.exercise-panel p { white-space: pre-wrap; margin: 8px 0; }
+.exercise-panel .exercise-meta { color: #8ca593; font-size: 10px; }
+.exercise-panel summary { cursor: pointer; color: #b6cdbb; }
+.exercise-panel details { border-top: 1px solid #34483b; padding: 8px 0; }
+.exercise-panel pre { overflow-x: auto; white-space: pre-wrap; font-size: 10px; }
+.exercise-panel a { color: #a3cbb0; text-decoration: none; }
+.exercise-panel .ghost-button { width: 100%; justify-content: center; margin-top: 8px; }
+.sql-explorer > .exercise-panel { margin-inline: 0; }
+@media (max-width: 580px) { .sql-explorer > .exercise-panel { width: 100%; } }

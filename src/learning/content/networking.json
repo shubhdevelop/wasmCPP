@@ -1,0 +1,49 @@
+{
+  "id": "networking",
+  "title": "Networking theory",
+  "shortLabel": "NET",
+  "category": "Computer science",
+  "description": "Reason about layers, transport, addressing, and the path of a request.",
+  "modules": [
+    {
+      "id": "network-foundations",
+      "title": "A request from browser to server",
+      "description": "Reason about layers, transport, addressing, and the path of a request.",
+      "lessons": [
+        {
+          "id": "layers",
+          "title": "Follow the layers",
+          "body": "### Different layers answer different questions\nHTTP describes an application request. TCP supplies an ordered byte stream between endpoints. IP supplies addressing and routing across networks. A link layer moves frames over a local connection.\n\n### Keep names separate from addresses\nDNS resolves a hostname to records such as IP addresses. A destination port identifies the service endpoint. These steps do different jobs.\n\n### A useful debugging habit\nAsk whether name resolution, connectivity, transport setup, TLS, or the application request failed instead of calling every failure a server error.",
+          "minutes": 8
+        },
+        {
+          "id": "tcp",
+          "title": "TCP, reliability & TLS",
+          "body": "### TCP provides a byte stream\nTCP uses sequence numbers and acknowledgments to track data, and retransmits when necessary. Applications still need message framing because one application write does not correspond to one read.\n\n### TLS has a separate job\nTLS protects the connection and authenticates the peer according to its configured trust model. It does not replace HTTP semantics.\n\n### Know which stack you are tracing\nAn HTTPS request over HTTP/1.1 or HTTP/2 usually uses TCP plus TLS. HTTP/3 uses QUIC over UDP, so its connection setup differs.",
+          "minutes": 8
+        }
+      ],
+      "exercises": [
+        {
+          "id": "networking-request-trace",
+          "title": "Trace an HTTPS request",
+          "difficulty": "Beginner",
+          "prompt": "Trace a fresh HTTPS request using HTTP/1.1 over TCP, with no cached DNS result and no reusable connection. Explain the role of DNS, the TCP handshake, TLS, and HTTP. Then describe what a reused connection avoids.",
+          "hints": [
+            "DNS is about finding an address.",
+            "TCP and TLS have separate setup and guarantees.",
+            "Avoid assuming all HTTPS uses TCP."
+          ],
+          "answer": "Resolve the hostname, choose an address, establish TCP, perform the TLS handshake and certificate verification, send the HTTP request, and receive the response. A reusable connection can avoid another TCP and TLS setup; DNS caching can also avoid another lookup. Routing and link-layer forwarding carry traffic throughout. HTTP/3 has a different transport sequence."
+        }
+      ],
+      "resources": [
+        {
+          "title": "TCP specification: RFC 9293",
+          "url": "https://www.rfc-editor.org/info/rfc9293/",
+          "kind": "Documentation"
+        }
+      ]
+    }
+  ]
+}

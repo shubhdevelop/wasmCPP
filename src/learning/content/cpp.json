@@ -1,0 +1,53 @@
+{
+  "id": "cpp",
+  "title": "C++ & DSA",
+  "shortLabel": "C++",
+  "category": "Programming",
+  "description": "Build algorithmic thinking with C++: data structures, invariants, and complexity.",
+  "modules": [
+    {
+      "id": "dsa-foundations",
+      "title": "Arrays, complexity & binary search",
+      "description": "Build algorithmic thinking with C++: data structures, invariants, and complexity.",
+      "lessons": [
+        {
+          "id": "arrays",
+          "title": "Arrays & the cost of an operation",
+          "body": "### Start with the representation\nA `std::vector<int>` stores elements contiguously. Reading an element by index takes constant time. Searching an unsorted vector may require inspecting every element.\n\n### Count the work\nFor an input of size n, a single traversal is O(n). Two nested traversals can be O(n²). Distinguish auxiliary space from storage occupied by the input.\n\n### Try it\nWrite down the time and auxiliary space needed to find the maximum in an unsorted vector. A running maximum needs O(n) time and O(1) auxiliary space.",
+          "minutes": 8
+        },
+        {
+          "id": "binary-search",
+          "title": "Binary search & loop invariants",
+          "body": "### Narrow the search interval\nBinary search works on sorted data. Maintain an inclusive interval `[left, right]` that contains every possible location of the target. Compare the middle element and discard the half that cannot contain the target.\n\nUse `left + (right - left) / 2` for the midpoint. Each iteration approximately halves the interval, giving O(log n) comparisons.\n\n### Edge cases\nTest an empty input, one element, a missing target, and targets at both ends. Return -1 when the target is absent. With duplicates, finding any matching index is different from finding the first match.",
+          "minutes": 8
+        }
+      ],
+      "exercises": [
+        {
+          "id": "cpp-binary-search",
+          "title": "Find a target in a sorted vector",
+          "difficulty": "Beginner",
+          "prompt": "Implement `find_index` without calling a standard-library search function. Return a matching index, or -1 when absent. Keep the iterative solution to O(log n) time and O(1) auxiliary space.\n\nUse the starter tests, then add tests for an empty vector and a target at each boundary.",
+          "hints": [
+            "Maintain left and right indices for an inclusive search interval.",
+            "When values[mid] is smaller than the target, move left to mid + 1.",
+            "Stop when left exceeds right."
+          ],
+          "answer": "```cpp\nint find_index(const std::vector<int>& values, int target) {\n    int left = 0;\n    int right = static_cast<int>(values.size()) - 1;\n    while (left <= right) {\n        int mid = left + (right - left) / 2;\n        if (values[mid] == target) return mid;\n        if (values[mid] < target) left = mid + 1;\n        else right = mid - 1;\n    }\n    return -1;\n}\n```",
+          "lab": "cpp",
+          "starter": "#include <iostream>\n#include <vector>\n\nint find_index(const std::vector<int>& values, int target) {\n    // TODO: implement iterative binary search.\n    return -1;\n}\n\nint main() {\n    std::vector<int> values{2, 4, 6, 8, 10};\n    std::cout << find_index(values, 8) << '\\n';\n    std::cout << find_index(values, 7) << '\\n';\n    std::cout << find_index({}, 1) << '\\n';\n}\n",
+          "expected": "3\n-1\n-1"
+        }
+      ],
+      "resources": [
+        {
+          "title": "C++ algorithms reference",
+          "url": "https://en.cppreference.com/cpp/algorithm",
+          "kind": "Documentation"
+        }
+      ]
+    }
+  ],
+  "lab": "cpp"
+}

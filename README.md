@@ -71,8 +71,36 @@ Open **SQLite Lab**, **DuckDB Lab**, or **PGlite Lab** from the sidebar (direct 
 - Engines use `@sqlite.org/sqlite-wasm`, `@duckdb/duckdb-wasm`, and `@electric-sql/pglite`. All binaries and worker scripts are hosted with the app; no runtime CDN is required.
 - Engine WASM binaries (and PGlite's filesystem bundle) use a versioned browser Cache API cache with content-hashed URLs. Denied storage or quota errors fall back to HTTP caching. JavaScript modules use normal browser caching. Unvisited engines are not downloaded.
 - Import local CSV with a header row or JSON arrays of objects into a named table. Headers become quoted SQL identifiers; values use bound parameters. Numeric columns become `DOUBLE PRECISION`, other values become `TEXT`, and missing values become SQL `NULL`. Nested JSON values are stored as JSON text. Imports are transactional and reject existing table names rather than overwriting data.
-- DuckDB additionally imports local Parquet files. CSV/JSON imports allow 20,000 rows and 100 columns; all uploaded files allow up to 20 MB.
+- DuckDB additionally imports local Parquet (.parquet/.pq), Arrow/Feather/IPC, and native DuckDB (.duckdb/.db) files. CSV/JSON imports allow 20,000 rows and 100 columns; all uploaded files allow up to 20 MB.
 - Execute the selected SQL or the full editor document with **Run SQL** / **Cmd/Ctrl+Enter**. The table explorer refreshes after commands. Scripts can include DDL, inserts, updates, and queries. SQLite displays the first result set in a script, DuckDB the last, and PGlite every result set. Run a selection to inspect a specific query.
 - Result grids display up to 1,000 rows. **Export CSV** exports the last displayed result set (up to that same limit).
 - SQL drafts persist per engine in local storage. Databases/datasets stay in memory and are cleared by reload, leaving the SQL labs, **Reset sandbox**, **Stop & clear**, or timeout. Resetting retains cached engine downloads.
 - Preparation allows five minutes for the initial engine download; queries and imports allow 30 seconds before the worker is terminated. Browser memory limits still apply.
+
+## Learning modules
+
+Open `/learn` for C++/DSA, DBMS, networking, OS, SQLite, DuckDB, PostgreSQL/PGlite, LLD, HLD, and Design Patterns. The starter curriculum has 10 modules, 20 lessons, and 12 exercises. Lessons link to practice, with hints, reference approaches, local notes, and self-reported completion. Runnable exercises open in the matching lab with isolated drafts and optional transactional SQL dataset setup.
+
+Edit `src/learning/content/*.json` to add modules, lessons, exercises, or resources. See [LEARNING_CONTENT.md](./LEARNING_CONTENT.md) for the schema, examples, local resource files, and authoring checks. Content ships with the app; learner progress and notes stay in browser storage.
+
+### Native database and additional imports
+
+| Lab | Imports |
+| --- | --- |
+| SQLite | CSV, TSV, JSON arrays, JSONL/NDJSON, `.db` / `.sqlite` / `.sqlite3`, SQLite SQL scripts |
+| DuckDB | CSV, TSV, JSON arrays, JSONL/NDJSON, `.parquet` / `.pq`, Arrow IPC / Feather V2 (`.arrow` / `.ipc` / `.feather`), native `.duckdb` / `.db`, DuckDB SQL scripts |
+| PGlite | CSV, TSV, JSON arrays, JSONL/NDJSON, compatible PostgreSQL SQL scripts, PGlite `dumpDataDir()` snapshots (`.tar` / `.tar.gz` / `.tgz`) |
+
+Native database files contain multiple tables. The name field becomes an attachment alias; the explorer shows catalog/schema/table names and generates properly quoted queries. DuckDB attachments are read-only and stay registered until reset. To edit a table, copy it into the working database with `CREATE TABLE editable AS SELECT * FROM "alias"."schema"."table"`. SQLite attachments are editable in-memory copies; the original local file is never modified.
+
+PGlite snapshot restore replaces the working in-memory database after the replacement initializes successfully and requires a compatible PGlite snapshot, not a generic PostgreSQL binary backup. The UI asks before replacing the current database. SQL scripts execute directly, can modify existing data, and can partially apply if their own transaction does not roll back. Use the engine's SQL dialect. PostgreSQL exports should use plain SQL with INSERT statements (`pg_dump --inserts --no-owner --no-privileges`); psql meta-commands and COPY-FROM-STDIN dump streams are not supported by this importer.
+
+`.db` is ambiguous, so native routing checks the actual SQLite/DuckDB file signature. SQLite files should be standalone backups, without WAL-dependent changes; encrypted databases and WAL/journal sidecars are unsupported. DuckDB storage-version compatibility still applies. A format from another database engine (such as MySQL tablespace files, SQL Server `.bak`, Access `.mdb`, or PostgreSQL custom-format `.dump`) needs an appropriate export/conversion; changing the filename extension is insufficient.
+
+All uploads remain limited to 20 MB; row/column limits apply to CSV/TSV/JSON imports. Native databases and Arrow/Parquet imports use engine/browser memory limits and the runtime deadline. No engine extension downloads or additional server are required for these formats.
+
+## Shared editor experience
+
+C++ and SQL use the same Local Lab / Catppuccin palettes and Vim preference. Change **Color theme** or **Vim** in either editor to update the shared browser preference; open tabs synchronize changes. Landing and learning pages follow the selected palette too. Existing C++ theme/Vim settings migrate automatically.
+
+In SQL labs, drag the divider beside the explorer to resize its width, or the divider between the editor and results to resize their heights. Focus a divider and use arrow keys (Shift for larger steps), Home, or End for keyboard resizing. SQL pane sizes persist across engines and reloads. Wide result tables scroll horizontally within their own focused region without expanding the whole page. The explorer's info icon opens the current engine's import formats and limits.

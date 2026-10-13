@@ -1,0 +1,76 @@
+{
+  "id": "design-patterns",
+  "title": "Design Patterns",
+  "shortLabel": "PAT",
+  "category": "System design",
+  "description": "Recognize reusable design approaches and choose patterns for a concrete reason.",
+  "modules": [
+    {
+      "id": "pattern-foundations",
+      "title": "Creational, structural & behavioral patterns",
+      "description": "Recognize reusable design approaches and choose patterns for a concrete reason.",
+      "lessons": [
+        {
+          "id": "families",
+          "title": "Three families of patterns",
+          "body": "### What varies in the design?\nCreational patterns organize object creation: Factory Method and Builder are examples. Structural patterns organize composition: Adapter and Decorator are examples. Behavioral patterns organize collaboration: Strategy and Observer are examples.\n\n### Match the pattern to the problem\nUse Adapter when an existing interface does not match the contract a caller expects. Use Strategy when an algorithm or policy varies independently of the caller.\n\nPatterns are vocabulary for design decisions. They are not a checklist to apply to every class.",
+          "minutes": 8
+        },
+        {
+          "id": "strategy",
+          "title": "Strategy through a changing policy",
+          "body": "### Isolate the changing part\nIf shipping price depends on an interchangeable policy, let Checkout depend on a ShippingPolicy contract. StandardShipping and ExpressShipping implement that contract.\n\n### Define the contract\nThe policy needs enough information to calculate a result without modifying unrelated state. Define what happens when a policy cannot price a shipment.\n\n### Avoid premature abstraction\nA simple conditional can be clearer when there are few stable cases. Strategy earns its cost when policies evolve, need testing in isolation, or must be selected dynamically.",
+          "minutes": 8
+        }
+      ],
+      "exercises": [
+        {
+          "id": "patterns-shipping-strategy",
+          "title": "Strategy: interchangeable shipping prices",
+          "difficulty": "Beginner",
+          "prompt": "Implement the shipping policies and Checkout.total. For nonnegative integer weights, standard costs 5 + 2 \u00d7 weight, express costs 10 + 4 \u00d7 weight, and pickup is free. Prices are integer units. Checkout must use the injected policy. Run the scenario and compare stdout. Explain when a simple conditional would be easier to maintain.",
+          "hints": [
+            "Keep the price formulas in the concrete policies.",
+            "Checkout adds the selected quote to the subtotal.",
+            "The selected policy must outlive Checkout."
+          ],
+          "lab": "cpp",
+          "starter": "#include <iostream>\nstruct ShippingPolicy {\n    virtual int quote(int weight) const = 0;\n    virtual ~ShippingPolicy() = default;\n};\nstruct Standard : ShippingPolicy {\n    int quote(int weight) const override { /* TODO: standard price */ return 0; }\n};\nstruct Express : ShippingPolicy {\n    int quote(int weight) const override { /* TODO: express price */ return 0; }\n};\nstruct Pickup : ShippingPolicy {\n    int quote(int) const override { return 0; }\n};\nclass Checkout {\n    const ShippingPolicy& policy;\npublic:\n    explicit Checkout(const ShippingPolicy& selected) : policy(selected) {}\n    int total(int subtotal, int weight) const { /* TODO: delegate to the policy */ return subtotal; }\n};\nint main() {\n    Standard standard;\n    Express express;\n    Pickup pickup;\n    std::cout << \"Standard: \" << Checkout(standard).total(100, 3) << '\\n';\n    std::cout << \"Express: \" << Checkout(express).total(100, 3) << '\\n';\n    std::cout << \"Pickup: \" << Checkout(pickup).total(100, 3) << '\\n';\n}\n",
+          "expected": "Standard: 111\nExpress: 122\nPickup: 100\n",
+          "answer": "Checkout depends on a contract, while each policy owns its formula. Add a new policy without changing Checkout. A conditional can be clearer for a small set of stable rules.\n\n```cpp\n#include <iostream>\nstruct ShippingPolicy {\n    virtual int quote(int weight) const = 0;\n    virtual ~ShippingPolicy() = default;\n};\nstruct Standard : ShippingPolicy {\n    int quote(int weight) const override { return 5 + 2 * weight; }\n};\nstruct Express : ShippingPolicy {\n    int quote(int weight) const override { return 10 + 4 * weight; }\n};\nstruct Pickup : ShippingPolicy {\n    int quote(int) const override { return 0; }\n};\nclass Checkout {\n    const ShippingPolicy& policy;\npublic:\n    explicit Checkout(const ShippingPolicy& selected) : policy(selected) {}\n    int total(int subtotal, int weight) const { return subtotal + policy.quote(weight); }\n};\nint main() {\n    Standard standard;\n    Express express;\n    Pickup pickup;\n    std::cout << \"Standard: \" << Checkout(standard).total(100, 3) << '\\n';\n    std::cout << \"Express: \" << Checkout(express).total(100, 3) << '\\n';\n    std::cout << \"Pickup: \" << Checkout(pickup).total(100, 3) << '\\n';\n}\n```"
+        },
+        {
+          "id": "patterns-temperature-adapter",
+          "title": "Adapter: connect a legacy sensor",
+          "difficulty": "Beginner",
+          "prompt": "Implement SensorAdapter.fahrenheit so a legacy Celsius sensor satisfies the TemperatureSource contract. Use F = C \u00d7 9 / 5 + 32 with floating-point arithmetic. Keep the legacy sensor and display function unchanged. Run the scenario and compare stdout.",
+          "hints": [
+            "Wrap the existing sensor and delegate the reading.",
+            "Use 9.0 / 5.0 to avoid integer division."
+          ],
+          "lab": "cpp",
+          "starter": "#include <iostream>\nclass LegacySensor {\npublic:\n    int readCelsius() const { return 25; }\n};\nstruct TemperatureSource {\n    virtual double fahrenheit() const = 0;\n    virtual ~TemperatureSource() = default;\n};\nclass SensorAdapter : public TemperatureSource {\n    const LegacySensor& sensor;\npublic:\n    explicit SensorAdapter(const LegacySensor& source) : sensor(source) {}\n    double fahrenheit() const override { /* TODO: adapt Celsius to Fahrenheit */ return 0; }\n};\nvoid display(const TemperatureSource& source) {\n    std::cout << \"Temperature: \" << source.fahrenheit() << \" F\\n\";\n}\nint main() {\n    LegacySensor sensor;\n    SensorAdapter adapter(sensor);\n    display(adapter);\n}\n",
+          "expected": "Temperature: 77 F\n",
+          "answer": "The adapter translates an existing interface into the one the caller expects. It holds a reference, so the legacy sensor must outlive it.\n\n```cpp\n#include <iostream>\nclass LegacySensor {\npublic:\n    int readCelsius() const { return 25; }\n};\nstruct TemperatureSource {\n    virtual double fahrenheit() const = 0;\n    virtual ~TemperatureSource() = default;\n};\nclass SensorAdapter : public TemperatureSource {\n    const LegacySensor& sensor;\npublic:\n    explicit SensorAdapter(const LegacySensor& source) : sensor(source) {}\n    double fahrenheit() const override { return sensor.readCelsius() * 9.0 / 5.0 + 32; }\n};\nvoid display(const TemperatureSource& source) {\n    std::cout << \"Temperature: \" << source.fahrenheit() << \" F\\n\";\n}\nint main() {\n    LegacySensor sensor;\n    SensorAdapter adapter(sensor);\n    display(adapter);\n}\n```"
+        },
+        {
+          "id": "patterns-inventory-observer",
+          "title": "Observer: notify inventory subscribers",
+          "difficulty": "Intermediate",
+          "prompt": "Implement subscribe, unsubscribe, and setStock. Notify each subscriber once in subscription order. Ignore duplicate subscriptions and allow unsubscribing safely even when absent. Observers remain alive during notifications and do not change subscriptions from update. Run the scenario and compare stdout.",
+          "hints": [
+            "Compare observer addresses to prevent duplicates.",
+            "Use the erase/remove idiom to unsubscribe.",
+            "The subject calls update through the Observer contract."
+          ],
+          "lab": "cpp",
+          "starter": "#include <iostream>\n#include <vector>\n#include <algorithm>\nstruct Observer {\n    virtual void update(int stock) = 0;\n    virtual ~Observer() = default;\n};\nclass Inventory {\n    std::vector<Observer*> observers;\npublic:\n    void subscribe(Observer& observer) {\n        // TODO: subscribe once.\n    }\n    void unsubscribe(Observer& observer) {\n        // TODO: remove this observer if present.\n    }\n    void setStock(int stock) {\n        // TODO: notify subscribers in order.\n    }\n};\nclass Display : public Observer {\n    const char* name;\npublic:\n    explicit Display(const char* label) : name(label) {}\n    void update(int stock) override { std::cout << name << \": \" << stock << '\\n'; }\n};\nint main() {\n    Display dashboard(\"Dashboard\"), alert(\"Alert\");\n    Inventory inventory;\n    inventory.subscribe(dashboard);\n    inventory.subscribe(alert);\n    inventory.subscribe(dashboard); // Duplicate subscriptions are ignored.\n    inventory.setStock(3);\n    inventory.unsubscribe(alert);\n    inventory.setStock(0);\n}\n",
+          "expected": "Dashboard: 3\nAlert: 3\nDashboard: 0\n",
+          "answer": "Inventory publishes through the Observer contract without knowing display types. This example uses non-owning pointers; observers must unsubscribe before destruction. Notifications are synchronous, and mutation during callbacks is outside this exercise.\n\n```cpp\n#include <iostream>\n#include <vector>\n#include <algorithm>\nstruct Observer {\n    virtual void update(int stock) = 0;\n    virtual ~Observer() = default;\n};\nclass Inventory {\n    std::vector<Observer*> observers;\npublic:\n    void subscribe(Observer& observer) {\n        if (std::find(observers.begin(), observers.end(), &observer) == observers.end())\n            observers.push_back(&observer);\n    }\n    void unsubscribe(Observer& observer) {\n        observers.erase(std::remove(observers.begin(), observers.end(), &observer), observers.end());\n    }\n    void setStock(int stock) {\n        for (auto* observer : observers) observer->update(stock);\n    }\n};\nclass Display : public Observer {\n    const char* name;\npublic:\n    explicit Display(const char* label) : name(label) {}\n    void update(int stock) override { std::cout << name << \": \" << stock << '\\n'; }\n};\nint main() {\n    Display dashboard(\"Dashboard\"), alert(\"Alert\");\n    Inventory inventory;\n    inventory.subscribe(dashboard);\n    inventory.subscribe(alert);\n    inventory.subscribe(dashboard); // Duplicate subscriptions are ignored.\n    inventory.setStock(3);\n    inventory.unsubscribe(alert);\n    inventory.setStock(0);\n}\n```"
+        }
+      ],
+      "resources": []
+    }
+  ],
+  "lab": "cpp"
+}

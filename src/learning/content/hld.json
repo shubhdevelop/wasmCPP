@@ -1,0 +1,43 @@
+{
+  "id": "hld",
+  "title": "High-level design",
+  "shortLabel": "HLD",
+  "category": "System design",
+  "description": "Reason about requirements, capacity, data flow, scalability, and failure.",
+  "modules": [
+    {
+      "id": "hld-foundations",
+      "title": "Requirements & system boundaries",
+      "description": "Reason about requirements, capacity, data flow, scalability, and failure.",
+      "lessons": [
+        {
+          "id": "requirements",
+          "title": "Make the problem measurable",
+          "body": "### Clarify before drawing boxes\nIdentify users, operations, constraints, and failure expectations. Separate functional requirements from latency, availability, and consistency goals.\n\n### Estimate with explicit assumptions\nFor 1 million new records per day at 200 bytes each, raw daily storage is about 200 MB before indexes, replication, and metadata. An average hides peaks, so plan separately for burst traffic.\n\nTreat estimates as tools for comparing options, not as precise forecasts.",
+          "minutes": 8
+        },
+        {
+          "id": "tradeoffs",
+          "title": "Data flow, caching & failure",
+          "body": "### Trace a request\nWrite down how a client request reaches the application, reads or writes data, and returns a response. Give each component a job before adding more components.\n\n### Design the failure path\nA cache miss should reach the authoritative store. Decide what happens when the cache or store is unavailable. Avoid treating a cache as the only copy of a record unless that is an intentional design.\n\n### State a tradeoff\nMore replicas can improve read capacity and availability, but introduce replication delay and consistency decisions.",
+          "minutes": 8
+        }
+      ],
+      "exercises": [
+        {
+          "id": "hld-url-shortener",
+          "title": "Design a URL shortener",
+          "difficulty": "Beginner",
+          "prompt": "Design create-short-link and redirect operations. Include a data model, ID strategy, cache behavior, expiration, and failure handling. Assume redirects greatly outnumber link creation. Explain one tradeoff in your design.",
+          "hints": [
+            "Short IDs need a collision strategy.",
+            "The database is authoritative; the cache is an optimization.",
+            "Consider abuse, expiry, and unavailable dependencies."
+          ],
+          "answer": "Expose POST /links and GET /:code. Store code, target_url, created_at, and optional expires_at with a unique code key. Use generated random codes with uniqueness checks/retry, or an allocated identifier encoded compactly. Cache popular code lookups with bounded TTLs that respect expiry. On a cache miss query the database, then populate the cache. Reject expired links and validate schemes. Describe rate limiting and abuse controls. Replicas can serve reads, with a policy for newly created links and replication lag."
+        }
+      ],
+      "resources": []
+    }
+  ]
+}

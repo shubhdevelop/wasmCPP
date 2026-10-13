@@ -1,7 +1,7 @@
 import { basicSetup } from "codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 import { markdown } from "@codemirror/lang-markdown";
-import { Compartment, EditorState } from "@codemirror/state";
+import { Compartment, EditorState, Prec } from "@codemirror/state";
 import { keymap, EditorView, lineNumbers } from "@codemirror/view";
 import { getCM, Vim, vim } from "@replit/codemirror-vim";
 import DOMPurify from "dompurify";
@@ -54,6 +54,12 @@ import {
 import { CompilerRuntime, RuntimeStoppedError } from "./runtime-client";
 import type { CppStandard, ProjectFile, WorkerRequest, WorkerResponse } from "./types";
 import "./style.css";
+import "./editor/theme.css";
+import { applyAppTheme, getEditorPreferences, setEditorPreferences, subscribeEditorPreferences } from "./editor/preferences";
+import type { ThemeId } from "./editor/preferences";
+import { editorTheme, sharedHighlighting } from "./editor/theme";
+import type { ExerciseContext } from "./learning/types";
+import { createExercisePanel } from "./learning/bridge";
 
 const FILESYSTEM_CODE = `#include <fstream>
 #include <iostream>
@@ -86,7 +92,7 @@ int main(int argc, char** argv) {
     std::cout << "Wrote /workspace/result.txt\\n";
 }`;
 
-const DEFAULT_FILES: ProjectFile[] = [
+const DEFAULT_CPP_FILES: ProjectFile[] = [
   { path: "main.cpp", content: FILESYSTEM_CODE },
   {
     path: "include/stats.hpp",
@@ -136,22 +142,25 @@ int main() {
   },
 };
 
-const STORAGE_KEY = "local-cpp-lab:project-v2";
-const FOLDER_STORAGE_KEY = "local-cpp-lab:folders-v1";
 const VIM_STORAGE_KEY = "local-cpp-lab:vim-enabled";
-const EDITOR_TABS_STORAGE_KEY = "local-cpp-lab:editor-tabs-v1";
-const EDITOR_LAYOUT_STORAGE_KEY = "local-cpp-lab:editor-layout-v1";
-const PREFERENCES_STORAGE_KEY = "local-cpp-lab:preferences-v1";
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Missing #app element");
 
-function renderEditorApp() {
+function renderEditorApp(context?: ExerciseContext) {
+const DEFAULT_FILES: ProjectFile[] = context?.exercise.starter ? [{path: "main.cpp", content: context.exercise.starter}] : DEFAULT_CPP_FILES;
+const exerciseScope = context ? `:exercise:${context.exercise.id}` : "";
+const STORAGE_KEY = "local-cpp-lab:project-v2" + exerciseScope;
+const FOLDER_STORAGE_KEY = "local-cpp-lab:folders-v1" + exerciseScope;
+const EDITOR_TABS_STORAGE_KEY = "local-cpp-lab:editor-tabs-v1" + exerciseScope;
+const EDITOR_LAYOUT_STORAGE_KEY = "local-cpp-lab:editor-layout-v1" + exerciseScope;
+const PREFERENCES_STORAGE_KEY = "local-cpp-lab:preferences-v1" + exerciseScope;
 app!.innerHTML = `
   <div class="shell app-frame">
     <aside class="site-sidebar" aria-label="Website navigation">
       <a class="site-brand" href="/welcome" aria-label="Local C++ Lab landing page"><span class="site-brand-mark">C++</span><span class="site-nav-label">Local C++ Lab</span></a>
       <nav class="site-navigation">
         <a class="site-nav-item active" href="/" aria-current="page"><i data-lucide="code-2"></i><span class="site-nav-label">Editor</span></a>
+        <a class="site-nav-item" href="/learn"><span>↗</span><span class="site-nav-label">Learn</span></a>
         <a class="site-nav-item" href="/labs/sqlite"><span>SQL</span><span class="site-nav-label">SQLite Lab</span></a>
         <a class="site-nav-item" href="/labs/duckdb"><span>DB</span><span class="site-nav-label">DuckDB Lab</span></a>
         <a class="site-nav-item" href="/labs/pglite"><span>PG</span><span class="site-nav-label">PGlite Lab</span></a>
@@ -339,6 +348,8 @@ app!.innerHTML = `
   </dialog>
 `;
 
+if (context) document.querySelector(".file-explorer")!.append(createExercisePanel(context));
+
 const ICONS = { AlignLeft, Check, ChevronDown, ChevronRight, Code2, Columns2, Copy, Download, Eye, FileCode2, FileText, Folder, FolderPlus, House, Image: ImageIcon, Info, Keyboard, Maximize2, Minimize2, PanelBottomClose, PanelBottomOpen, PanelLeftClose, PanelLeftOpen, Pencil, Play, Plus, RotateCcw, Rows2, Search, Square, Terminal, Trash2, Upload };
 createIcons({ icons: ICONS });
 
@@ -377,7 +388,6 @@ function loadStoredEditorTabs(storage: Storage, files: ProjectFile[]) {
   }
 }
 
-type ThemeId = "local" | "catppuccin-latte" | "catppuccin-frappe" | "catppuccin-macchiato" | "catppuccin-mocha";
 
 type StoredPreferences = {
   standard: CppStandard;
@@ -398,7 +408,7 @@ type StoredPreferences = {
 
 function loadStoredPreferences(storage: Storage): StoredPreferences {
   const mobile = window.matchMedia("(max-width: 680px)").matches;
-  const defaults: StoredPreferences = { standard: "c++20", optimization: "2", stdin: "", argv: "/workspace/data/numbers.txt", explorerOpen: !mobile, panelOpen: true, navigationOpen: !mobile, theme: "local", sidebarWidth: 218, panelHeight: 230, editorSplitRatio: .5, markdownSplitRatio: .5, formatOnSave: false, collapsedFolders: [] };
+  const defaults: StoredPreferences = { standard: "c++20", optimization: "2", stdin: context?.exercise.stdin ?? "", argv: context ? "" : "/workspace/data/numbers.txt", explorerOpen: !mobile, panelOpen: true, navigationOpen: !mobile, theme: "local", sidebarWidth: 218, panelHeight: 230, editorSplitRatio: .5, markdownSplitRatio: .5, formatOnSave: false, collapsedFolders: [] };
   try {
     const value = JSON.parse(storage.getItem(PREFERENCES_STORAGE_KEY) || "null") as Partial<StoredPreferences> | null;
     if (!value) return defaults;
@@ -441,14 +451,14 @@ let quickOpenIndex = 0;
 let explorerOpen = storedPreferences.explorerOpen;
 let panelOpen = storedPreferences.panelOpen;
 let navigationOpen = storedPreferences.navigationOpen;
-let colorTheme = storedPreferences.theme;
+let colorTheme = getEditorPreferences().theme;
 let sidebarWidth = storedPreferences.sidebarWidth;
 let panelHeight = storedPreferences.panelHeight;
 let editorSplitRatio = storedPreferences.editorSplitRatio;
 let markdownSplitRatio = storedPreferences.markdownSplitRatio;
 let formatOnSave = storedPreferences.formatOnSave;
 let zenMode = false;
-let vimEnabled = localStorage.getItem(VIM_STORAGE_KEY) === "true";
+let vimEnabled = getEditorPreferences().vim;
 const collapsedFolders = new Set(storedPreferences.collapsedFolders);
 let draggedPath: string | null = null;
 let draggedKind: "file" | "folder" | null = null;
@@ -460,11 +470,11 @@ function rememberParentFolders(path: string) {
 
 projectFiles.forEach((file) => rememberParentFolders(file.path));
 
-const runKeymap = keymap.of([
+const runKeymap = Prec.highest(keymap.of([
   { key: "Mod-Enter", run: () => { void runCode(); return true; } },
   { key: "Mod-s", run: () => { void saveActiveFile(); return true; } },
   { key: "Shift-Alt-f", run: () => { void formatDocument(activeEditorPane); return true; } },
-]);
+]));
 type EditorPane = {
   id: string;
   path: string;
@@ -473,6 +483,7 @@ type EditorPane = {
   editableConfig: Compartment;
   languageConfig: Compartment;
   vimConfig: Compartment;
+  themeConfig: Compartment;
   preview: HTMLElement;
   previewMode: boolean;
   viewingImage: boolean;
@@ -547,6 +558,7 @@ function createEditorPane(id: string, path: string, container: HTMLElement, host
   const editableConfig = new Compartment();
   const languageConfig = new Compartment();
   const vimConfig = new Compartment();
+  const themeConfig = new Compartment();
   const preview = container.querySelector<HTMLElement>("[data-markdown-preview]")!;
   const target = projectFiles.find((file) => file.path === path) || projectFiles[0];
   const view = new EditorView({
@@ -555,6 +567,8 @@ function createEditorPane(id: string, path: string, container: HTMLElement, host
       extensions: [
         vimConfig.of(vimEnabled ? vim({ status: true }) : []),
         basicSetup,
+        sharedHighlighting,
+        themeConfig.of(editorTheme(colorTheme)),
         lineNumbers(),
         languageConfig.of(languageForPath(target.path)),
         runKeymap,
@@ -581,7 +595,7 @@ function createEditorPane(id: string, path: string, container: HTMLElement, host
     }),
     parent: host,
   });
-  const pane: EditorPane = { id, path: target.path, container, view, editableConfig, languageConfig, vimConfig, preview, previewMode: false, viewingImage: false, previewObjectUrls: [], previewRevision: 0 };
+  const pane: EditorPane = { id, path: target.path, container, view, editableConfig, languageConfig, vimConfig, themeConfig, preview, previewMode: false, viewingImage: false, previewObjectUrls: [], previewRevision: 0 };
   editorPanes.push(pane);
   container.style.setProperty("--markdown-split-ratio", `${markdownSplitRatio * 100}%`);
   const previewResizer = container.querySelector<HTMLElement>("[data-markdown-resizer]")!;
@@ -1780,11 +1794,11 @@ function setSiteNavigationOpen(open: boolean) {
 function setColorTheme(theme: ThemeId, save = true) {
   colorTheme = theme;
   themeSelect.value = theme;
-  if (theme === "local") delete document.body.dataset.theme;
-  else document.body.dataset.theme = theme;
-  document.documentElement.style.colorScheme = theme === "catppuccin-latte" ? "light" : "dark";
+  applyAppTheme(theme);
+  editorPanes.forEach(pane => pane.view.dispatch({effects:pane.themeConfig.reconfigure(editorTheme(theme))}));
   editorPanes.forEach((pane) => { if (pane.previewMode) renderMarkdownPreview(pane); });
   if (save) {
+    setEditorPreferences({theme});
     persistPreferences();
     showToast(theme === "local" ? "Local Lab theme enabled." : `${themeSelect.selectedOptions[0]?.textContent || "Catppuccin"} enabled.`);
   }
@@ -1823,6 +1837,7 @@ function syncVimModeUi() {
 function setVimEnabled(enabled: boolean) {
   if (enabled === vimEnabled) return;
   vimEnabled = enabled;
+  setEditorPreferences({vim:enabled});
   editorPanes.forEach((pane) => pane.view.dispatch({ effects: pane.vimConfig.reconfigure(enabled ? vim({ status: true }) : []) }));
   try { localStorage.setItem(VIM_STORAGE_KEY, String(enabled)); }
   catch { showToast("The Vim preference could not be saved.", "error"); }
@@ -1964,7 +1979,7 @@ document.querySelector<HTMLButtonElement>("#reset-button")!.addEventListener("cl
   persistProject();
   persistFolders();
   stdin.value = "";
-  argvInput.value = "/workspace/data/numbers.txt";
+  argvInput.value = context ? "" : "/workspace/data/numbers.txt";
   persistPreferences();
   switchFile("main.cpp");
   editorPanes.filter((pane) => pane !== activeEditorPane).forEach((pane) => loadFileIntoPane(pane, "main.cpp"));
@@ -2153,6 +2168,11 @@ document.querySelector<HTMLFormElement>("#rename-item-form")!.addEventListener("
 renderFileTree();
 bindDropTargets(document.querySelector<HTMLElement>(".mount-label")!);
 setColorTheme(colorTheme, false);
+const unsubscribeEditorPreferences = subscribeEditorPreferences(preferences => {
+  if (preferences.theme !== colorTheme) setColorTheme(preferences.theme,false);
+  if (preferences.vim !== vimEnabled) setVimEnabled(preferences.vim);
+});
+window.addEventListener("beforeunload",unsubscribeEditorPreferences);
 setSiteNavigationOpen(navigationOpen);
 setExplorerOpen(explorerOpen);
 setPanelOpen(panelOpen);
@@ -2172,12 +2192,32 @@ window.addEventListener("beforeunload", () => runtime.dispose());
 }
 
 function renderLandingPage() {
-  document.body.classList.add("landing-page");
-  app!.innerHTML = `<main class="landing-shell"><div class="landing-copy"><span class="landing-kicker">Local C++ Lab</span><h1>Compile and run C++ in your browser.</h1><p>A private Clang + WASI workspace with files, Vim motions, split editing, and no server upload.</p><a href="/">Open C++ editor</a><p><a href="/labs/sqlite">SQLite Lab</a> · <a href="/labs/duckdb">DuckDB Lab</a> · <a href="/labs/pglite">PGlite Lab</a></p></div></main>`;
+  void import("./landing").then(({renderLandingPage}) => renderLandingPage(app!));
 }
 
-if (/^\/(welcome|home)\/?$/.test(window.location.pathname)) renderLandingPage();
-else if (/^\/labs\/(sqlite|duckdb|pglite)\/?$/.test(window.location.pathname)) {
-  const engine = window.location.pathname.split("/")[2] as "sqlite" | "duckdb" | "pglite";
-  void import("./sql/lab").then(({renderSqlLab}) => renderSqlLab(app!, engine));
-} else renderEditorApp();
+async function startApp() {
+  applyAppTheme(getEditorPreferences().theme);
+  subscribeEditorPreferences(() => {});
+  const path = window.location.pathname;
+  const exerciseId = new URLSearchParams(window.location.search).get("exercise");
+  let context: ExerciseContext | undefined;
+  if (exerciseId && !path.startsWith("/learn")) {
+    const {findExercise} = await import("./learning/catalog");
+    context = findExercise(exerciseId);
+    const target = path.startsWith("/labs/") ? path.split("/")[2] : "cpp";
+    if (!context || context.exercise.lab !== target) {
+      app!.innerHTML = '<main class="exercise-not-found"><h1>Exercise not found for this lab.</h1><a href="/learn">Browse learning paths</a></main>';
+      return;
+    }
+  }
+  if (/^\/(welcome|home)\/?$/.test(path)) renderLandingPage();
+  else if (/^\/learn(?:\/|$)/.test(path)) {
+    const {renderLearningHub} = await import("./learning/hub");
+    renderLearningHub(app!);
+  } else if (/^\/labs\/(sqlite|duckdb|pglite)\/?$/.test(path)) {
+    const engine = path.split("/")[2] as "sqlite" | "duckdb" | "pglite";
+    const {renderSqlLab} = await import("./sql/lab");
+    renderSqlLab(app!, engine, context);
+  } else renderEditorApp(context);
+}
+void startApp();

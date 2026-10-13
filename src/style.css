@@ -369,13 +369,7 @@ body.zen-mode { overflow: hidden; background: var(--code); }
   .zen-mode .panes { height: calc(100% - 92px); }
 }
 
-body.landing-page { overflow: auto; color: var(--ink); background: #f4f3ef; }
-.landing-shell { min-height: 100%; padding: clamp(32px,8vw,110px); display: grid; place-items: center start; background: radial-gradient(circle at 80% 15%, rgba(35,99,71,.12), transparent 30rem), #f4f3ef; }
-.landing-copy { width: min(720px,100%); }
-.landing-kicker { color: #236347; font: 800 11px "SFMono-Regular", Consolas, monospace; text-transform: uppercase; letter-spacing: .12em; }
-.landing-copy h1 { max-width: 680px; margin: 18px 0; font-size: clamp(40px,7vw,78px); line-height: .98; letter-spacing: -.06em; }
-.landing-copy p { max-width: 580px; margin: 0 0 30px; color: #5f6a63; font-size: 16px; line-height: 1.7; }
-.landing-copy a { min-height: 44px; padding: 0 18px; display: inline-flex; align-items: center; border-radius: 8px; color: white; background: #236347; text-decoration: none; font-size: 13px; font-weight: 800; }
+
 
 .markdown-preview { height: 100%; overflow: auto; padding: clamp(24px,5vw,64px) max(24px,calc((100% - 820px)/2)); color: #cfd7d1; background: var(--code); font-size: 14px; line-height: 1.7; outline: none; }
 .markdown-preview > :first-child { margin-top: 0; }
@@ -575,4 +569,44 @@ body[data-theme^="catppuccin-"] .primary-button { color: var(--ctp-crust); backg
   #sql-tables { display: flex; gap: 12px; }
   #sql-tables details { margin: 0; }
   .sql-workbench { grid-template-rows: 32px minmax(120px,40%) minmax(0,1fr); }
+}
+.file-explorer > .exercise-panel { max-height: 50%; overflow-y: auto; flex: 0 1 auto; }
+.exercise-not-found { padding: 50px; color: #dce3de; }
+.exercise-not-found a { color: #a3cbb0; }
+/* Keep large native catalogs inside the explorer rather than stretching the workbench. */
+.sql-body { grid-template-rows: minmax(0,1fr); overflow: hidden; }
+.sql-explorer { min-width: 0; min-height: 0; }
+@media (max-width: 580px) { .sql-body { grid-template-rows: auto minmax(0,1fr); } }
+.sql-frame { grid-template-rows: minmax(0,1fr); }
+.sql-workspace { min-height: 0; overflow: hidden; }
+@media (max-width: 580px) { .sql-frame { grid-template-rows: auto minmax(0,1fr); } }
+/* SQL workbench splitters and shared editor controls. */
+.sql-body { grid-template-columns: var(--sql-sidebar-width,240px) 5px minmax(0,1fr); }
+.sql-workbench { grid-template-rows: 32px minmax(0,var(--sql-editor-height,45%)) 5px minmax(0,1fr); }
+.sql-explorer-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 8px; }
+.sql-explorer-heading h2 { margin: 0; }
+.sql-explorer-heading .chrome-button { width: 24px; height: 24px; font-size: 17px; }
+.sql-editor-heading { align-items: center; padding-block: 0; }
+.sql-editor-preferences { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sql-editor-preferences button { border: none; color: #829087; background: transparent; padding: 4px 8px; border-radius: 4px; font: 10px system-ui; }
+.sql-editor-preferences button[aria-pressed="true"] { color: #111713; background: #99bf87; }
+body[data-theme^="catppuccin-"] .sql-editor-preferences button { color: var(--ctp-subtext); }
+body[data-theme^="catppuccin-"] .sql-editor-preferences button[aria-pressed="true"] { color: var(--ctp-base); background: var(--ctp-green); }
+.sql-frame :is(.column-resizer,.row-resizer) { touch-action: none; }
+.sql-results { min-width: 0; overflow: hidden; }
+#sql-results { min-width: 0; overflow-x: hidden; }
+.sql-result { min-width: 0; }
+.sql-table-scroll { width: 100%; min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: auto; }
+.sql-result table { width: max-content; min-width: 100%; }
+.sql-result :is(th,td) { max-width: none; overflow: visible; text-overflow: clip; }
+.sql-import-dialog .sql-help { font-size: 13px; line-height: 1.9; }
+body[data-theme^="catppuccin-"] .sql-import-dialog .sql-help { color: var(--ctp-subtext); }
+@media (max-width: 850px) { .sql-body { grid-template-columns: var(--sql-sidebar-width,200px) 5px minmax(0,1fr); } }
+@media (max-width: 580px) {
+  .sql-body { grid-template-columns: minmax(0,1fr); }
+  #sql-sidebar-resizer { display: none; }
+  .sql-explorer-heading { margin: 0; }
+  .sql-explorer-heading h2 { display: block; font-size: 11px; }
+  .sql-editor-heading .sql-editor-preferences > * { display: block; }
+  .sql-workbench { grid-template-rows: 32px minmax(0,var(--sql-editor-height,40%)) 5px minmax(0,1fr); }
 }

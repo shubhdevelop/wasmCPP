@@ -1,0 +1,49 @@
+{
+  "id": "os",
+  "title": "Operating systems",
+  "shortLabel": "OS",
+  "category": "Computer science",
+  "description": "Understand processes, scheduling, memory, and the boundaries of a sandbox.",
+  "modules": [
+    {
+      "id": "os-foundations",
+      "title": "Scheduling & virtual memory",
+      "description": "Understand processes, scheduling, memory, and the boundaries of a sandbox.",
+      "lessons": [
+        {
+          "id": "scheduling",
+          "title": "Processes & scheduling",
+          "body": "### Separate a program from its execution\nA program is stored code. A process is an executing instance with resources and an address space. Threads within a process share parts of that address space.\n\n### Scheduling chooses who runs\nA ready process can run; a blocked process is waiting for something. Round-robin scheduling limits each ready process to a time quantum before it returns to the ready queue.\n\n### Measure a policy\nResponse time, turnaround time, and waiting time capture different aspects of scheduling. State assumptions about arrivals, context-switch cost, and I/O before calculating them.",
+          "minutes": 8
+        },
+        {
+          "id": "memory",
+          "title": "Virtual memory & isolation",
+          "body": "### Addresses belong to a context\nVirtual memory lets processes use virtual addresses that the system maps to physical memory. Page permissions help enforce access boundaries.\n\n### Faults are not always crashes\nA page fault can cause the operating system to resolve a mapping or load a page; an invalid access can instead terminate the process.\n\n### This browser lab is a model\nThe C++ sandbox does not expose native process creation or host system calls. Use it to simulate scheduling and memory algorithms rather than to control the host operating system.",
+          "minutes": 8
+        }
+      ],
+      "exercises": [
+        {
+          "id": "os-round-robin",
+          "title": "Calculate a round-robin schedule",
+          "difficulty": "Beginner",
+          "prompt": "Three processes arrive at time 0 with CPU bursts A=5, B=3, C=1. The initial queue is A, B, C. Use quantum 2, no I/O, and zero context-switch cost. Write the execution timeline and the turnaround time of each process.",
+          "hints": [
+            "A runs from 0 to 2, then B runs from 2 to 4.",
+            "A process that finishes does not rejoin the queue.",
+            "All arrivals are at 0, so turnaround time equals completion time."
+          ],
+          "answer": "Timeline: A 0–2, B 2–4, C 4–5, A 5–7, B 7–8, A 8–9. Turnaround: A=9, B=8, C=5. Waiting times: A=4, B=5, C=4. Average turnaround is 22/3 time units."
+        }
+      ],
+      "resources": [
+        {
+          "title": "Linux man-pages reference",
+          "url": "https://man7.org/linux/man-pages/",
+          "kind": "Documentation"
+        }
+      ]
+    }
+  ]
+}
