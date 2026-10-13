@@ -10,32 +10,49 @@ body[data-theme^="catppuccin-"] .sql-error { color: var(--ctp-red); }
 body[data-theme^="catppuccin-"] .exercise-panel { color: var(--ctp-subtext); border-color: var(--ctp-surface1); }
 body[data-theme^="catppuccin-"] .exercise-panel :is(h2,a,summary) { color: var(--ctp-text); }
 body[data-theme^="catppuccin-"] .exercise-panel .exercise-meta { color: var(--ctp-overlay); }
-/* Marketing and learning views use the same selected palette. */
-body.landing-page[data-theme^="catppuccin-"] { --lp-paper:var(--ctp-base); --lp-ink:var(--ctp-text); --lp-muted:var(--ctp-subtext); --lp-line:var(--ctp-surface1); --lp-green:var(--ctp-mauve); color:var(--ctp-text); background:var(--ctp-base); }
-body.landing-page[data-theme^="catppuccin-"] :is(.lp-lab,.lp-engine-strip,.lp-why) { color:var(--ctp-text); background:var(--ctp-mantle); border-color:var(--ctp-surface1); }
-body.landing-page[data-theme^="catppuccin-"] :is(.lp-lab-tags span,.lp-lab-symbol) { color:var(--ctp-text); background:var(--ctp-surface0); border-color:var(--ctp-surface1); }
-body.landing-page[data-theme^="catppuccin-"] :is(.lp-nav nav a,.lp-engine-strip b,.lp-engine-strip small,.lp-why-intro > p:not(.lp-eyebrow),.lp-reasons p,.lp-lab-cta,.lp-local-diagram > span,.lp-local-diagram strong,.lp-local-diagram strong span,.lp-eyebrow,.lp-hero-note,.lp-lab-type) { color:var(--ctp-subtext); }
-body.landing-page[data-theme^="catppuccin-"] :is(.lp-hero h1 em,.lp-why h2 em) { color:var(--ctp-peach); }
-body.landing-page[data-theme^="catppuccin-"] :is(.lp-reasons article,.lp-local-diagram,.lp-lab-cta) { border-color:var(--ctp-surface1); }
-body.landing-page[data-theme^="catppuccin-"] .lp-demo { box-shadow:0 20px 50px -20px #0005; }
-body.landing-page[data-theme^="catppuccin-"] .lp-final { color:var(--ctp-text); background:var(--ctp-mantle); }
-body.landing-page[data-theme^="catppuccin-"] .lp-final :is(p,.lp-final-note) { color:var(--ctp-subtext); }
-body.landing-page[data-theme^="catppuccin-"] a.lp-button:not(.lp-button-small) { color:var(--ctp-base); background:var(--ctp-mauve); border-color:var(--ctp-mauve); }
-body.learning-page[data-theme^="catppuccin-"] { color:var(--ctp-text); background:var(--ctp-base); }
-body.learning-page[data-theme^="catppuccin-"] :is(.lh-brand,.lh-content h1,.lh-track h2,.lh-outline h2,.lh-library-tools h2,.lh-prose h2,.lh-prose h3) { color:var(--ctp-text); }
-body.learning-page[data-theme^="catppuccin-"] :is(.lh-track,.lh-search input,.lh-notes textarea) { color:var(--ctp-text); background:var(--ctp-mantle); border-color:var(--ctp-surface1); }
-body.learning-page[data-theme^="catppuccin-"] :is(.lh-hub-stats span,.lh-track-symbol,.lh-prose code,.lh-lab-callout,.lh-outline nav a[aria-current="page"]) { color:var(--ctp-text); background:var(--ctp-surface0); border-color:var(--ctp-surface1); }
-body.learning-page[data-theme^="catppuccin-"] :is(.lh-header,.lh-outline,.lh-breadcrumb,.lh-footer,.lh-hint,.lh-answer,.lh-completion,.lh-resources,.lh-module-links) { border-color:var(--ctp-surface1); }
-body.learning-page[data-theme^="catppuccin-"] :is(.lh-prose,.lh-intro > p:not(.lh-kicker),.lh-track > p,.lh-outline > p:not(.lh-kicker),.lh-header nav a,.lh-outline nav a,.lh-module-links a,.lh-next,.lh-kicker,.lh-breadcrumb,.lh-resources a,.lh-resources small,.lh-track-counts,.lh-track-top small,.lh-content-meta,.lh-notes,.lh-footer,.lh-lab-callout p,.lh-hint summary,.lh-answer summary) { color:var(--ctp-subtext); }
-body.learning-page[data-theme^="catppuccin-"] .lh-intro h1 em { color:var(--ctp-peach); }
-body.learning-page[data-theme^="catppuccin-"] :is(.lh-primary,.lh-filters button[aria-pressed="true"],.lh-brand > span) { color:var(--ctp-base); background:var(--ctp-mauve); border-color:var(--ctp-mauve); }
-body.learning-page[data-theme^="catppuccin-"] .lh-prose pre { color:var(--ctp-text); background:var(--ctp-crust); }
-body.learning-page[data-theme^="catppuccin-"] progress { accent-color:var(--ctp-green); }
-body.learning-page[data-theme^="catppuccin-"] progress::-webkit-progress-value { background:var(--ctp-green); }
-body.landing-page[data-theme^="catppuccin-"] :is(.lp-demo,.lp-demo-code,.lp-demo-output) { color:var(--ctp-text); background:var(--ctp-base); border-color:var(--ctp-surface1); }
-body.landing-page[data-theme^="catppuccin-"] :is(.lp-demo-top,.lp-demo-tabs,.lp-demo-footer) { color:var(--ctp-subtext); background:var(--ctp-mantle); border-color:var(--ctp-surface1); }
-body.landing-page[data-theme^="catppuccin-"] .lp-demo-tabs button[aria-selected="true"] { color:var(--ctp-text); background:var(--ctp-base); border-color:var(--ctp-mauve); }
-body.landing-page[data-theme^="catppuccin-"] :is(.lp-code-muted,.lp-demo-output > div,.lp-demo-filename) { color:var(--ctp-overlay); }
-body.landing-page[data-theme^="catppuccin-"] .lp-code-orange { color:var(--ctp-mauve); }
-body.landing-page[data-theme^="catppuccin-"] :is(.lp-code-green,.lp-output-success) { color:var(--ctp-green); }
-body.landing-page[data-theme^="catppuccin-"] .lp-demo-output pre { color:var(--ctp-text); }
+/* Reading pages share semantic colors, including hover and completion states.
+   Keep the original local palette as component fallbacks. */
+body:is(.landing-page,.learning-page)[data-theme^="catppuccin-"] {
+  --page-bg: var(--ctp-base);
+  --page-text: var(--ctp-text);
+  --page-muted: color-mix(in srgb, var(--ctp-text) 40%, var(--ctp-subtext));
+  --page-surface: var(--ctp-mantle);
+  --page-soft: var(--ctp-surface0);
+  --page-border: var(--ctp-surface1);
+  --page-border-hover: var(--ctp-mauve);
+  --page-accent: var(--ctp-mauve);
+  --page-on-accent: var(--ctp-base);
+  --page-accent-hover: color-mix(in srgb, var(--ctp-mauve) 90%, var(--ctp-text));
+  --page-link: var(--ctp-text);
+  --page-highlight: var(--ctp-peach);
+  --page-success: var(--ctp-green);
+  --page-code-bg: var(--ctp-crust);
+  --page-code-surface: var(--ctp-mantle);
+  --page-code-border: var(--ctp-surface1);
+  --page-code-text: var(--ctp-text);
+  --page-code-muted: var(--page-muted);
+  --page-code-accent: var(--ctp-mauve);
+  --page-code-green: color-mix(in srgb, var(--ctp-green) 65%, var(--ctp-text));
+  --page-code-footer: var(--page-muted);
+  --page-final-bg: var(--ctp-mantle);
+  --page-final-text: var(--ctp-text);
+  --page-final-muted: var(--page-muted);
+  --page-final-button: var(--ctp-mauve);
+  --page-final-button-text: var(--ctp-base);
+  --page-final-button-hover: var(--page-accent-hover);
+}
+body:is(.landing-page,.learning-page)[data-theme^="catppuccin-"] { scrollbar-color: var(--ctp-surface2) var(--ctp-base); }
+body.learning-page[data-theme^="catppuccin-"] progress { background: var(--ctp-surface0); }
+body.learning-page[data-theme^="catppuccin-"] progress::-webkit-progress-bar { background: var(--ctp-surface0); }
+body.landing-page[data-theme^="catppuccin-"] .lp-demo { box-shadow: 0 20px 50px -20px #0005; }
+/* Latte's light surfaces need stronger secondary and syntax text. */
+body:is(.landing-page,.learning-page)[data-theme="catppuccin-latte"] {
+  --page-muted: color-mix(in srgb, var(--ctp-text) 80%, var(--ctp-subtext));
+  --page-highlight: color-mix(in srgb, var(--ctp-mauve) 70%, var(--ctp-text));
+  --page-code-accent: var(--page-highlight);
+  --page-code-green: color-mix(in srgb, var(--ctp-text) 85%, var(--ctp-green));
+}
+/* Apply palette switches immediately instead of interpolating through colors
+   from the previous theme. Keep the button's movement feedback. */
+body.landing-page[data-theme^="catppuccin-"] a.lp-button { transition: transform .15s; }
+body.landing-page[data-theme^="catppuccin-"] a.lp-lab { transition: box-shadow .15s; }
